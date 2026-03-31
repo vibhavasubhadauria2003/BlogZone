@@ -1,0 +1,21 @@
+{
+  "name": "blogzone",
+  "version": "1.0.0",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "dev": "nodemon -r dotenv/config --experimental-json-modules src/index.js"
+  },
+
+  "keywords": [
+    "expressjs",
+    "mongodb"
+  ],
+  "author": "Vibhavasu",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/vibhavasubhadauria2003/BlogZone/issues"
+  },
+  "homepage": "https://github.com/vibhavasubhadauria2003/BlogZone#readme",
+  "description": ""
+}
