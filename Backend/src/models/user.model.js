@@ -1,4 +1,4 @@
-// import { type } from "express/lib/response";
+
 import mongoose, { Schema } from "mongoose";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
@@ -28,11 +28,6 @@ const userSchema = new Schema(
     },
     gender: {
         type: String,
-        required: true,
-        trim: true,
-    },
-    progressPoints: {
-        type: Number,
         required: true,
         trim: true,
     },
