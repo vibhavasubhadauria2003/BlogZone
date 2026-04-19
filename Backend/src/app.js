@@ -17,7 +17,7 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(cookieParser());
 
 import { userRouter } from "./routes/user.router.js";
-app.use('/user',userRouter);
+app.use('/users',userRouter);
 app.get('/',(req,res)=>{
     res.render('index');
 })

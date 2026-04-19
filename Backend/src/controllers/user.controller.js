@@ -1,5 +1,126 @@
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { ApiError } from "../utils/ApiError.js";
+import {User} from "../models/user.model.js";
+import { uploadOnCloudinary, deleteOnCloudinary } from "../utils/cloudinary.js";
+import { sendEmail } from "../utils/SendMail.js";
 
-const registerUser = (req, res) => {
+// const generateAccessandRefreshToken = async (userId) => {
+//   try {
+//     const user = await User.findById(userId);
+//     const userAccessToken = await user.generateAccessToken();
+//     const userRefreshToken = await user.generateRefreshToken();
+//     user.refreshToken = userRefreshToken;
+//     await user.save({ validateBeforeSave: false });
+//     return { userAccessToken, userRefreshToken };
+//   } catch (error) {
+//     throw new ApiError(
+//       500,
+//       "Something went wrong while generating Access and Refresh Token"
+//     );
+//   }
+// };
+
+const registerUser = asyncHandler(async (req, res) => {
+  try {
+    const { email, fullName, dob, gender, password } = req.body;
+    if (!fullName || !email || !password) {
+      throw new ApiError(400, "All fields are required");
+    }
+    // Check if user already exists
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      throw new ApiError(409, "User with this email already exists");
+    }
+    const profileImagePath = req.files?.profileImage[0]?.path;
+    if (!profileImagePath) {
+      throw new ApiError(400, "Profile Image file file is required");
+    }
+    console.log(profileImagePath);
+    const profileImage = await uploadOnCloudinary(profileImagePath);
+    console.log(profileImage);
+    if (!profileImage) {
+      throw new ApiError(400, "Cloudinary Profile Image link is unavilable");
+    }
+    const verificationcode = Math.floor(
+      100000 + Math.random() * 900000
+    ).toString();
+    
+    const newUser = new User({
+      email,
+      fullName,
+      dob,
+      gender,
+      profileImage,
+      password,
+      verificationcode,
+    });
+    const user = await newUser.save({
+      validateBeforeSave: true,
+    });
+    if (!user) {
+      throw new ApiError(500, "Error while registering on DB");
+    }
+    const createdUser = await User.findById(user._id).select(
+      "-password -refreshToken"
+    );
+    if (!createdUser) {
+      throw new ApiError(500, "Error while registering on DB");
+    }
+    sendEmail(
+      email,
+      "Email Verification for BlogZone",
+      `Your verification code is: ${verificationcode}`,
+      `<p>Your verification code is: <strong>${verificationcode}</strong></p>`
+    );
+    const options = {
+    httpOnly: true,
+    secure: true,
+  };
+    return res
+      .status(201)
+      .cookie("emailToken", email, options)
+      .json(new ApiResponse(201, newUser, "User registered successfully"));
+  } catch (error) {
+    await deleteOnCloudinary(profileImage.public_id);
+    if (error.code === 11000) {
+      throw new ApiError(409, "Not regestering User already exists");
+    }
+    throw new ApiError(500, "Error while registering on DB");
+  }
+});
+
+const verifyUser = asyncHandler(async (req, res) => {
+  try {
+    const { emailToken } = req.cookies;
+    const { verificationcode } = req.body;
+    if (!emailToken) {
+      throw new ApiError(400, "Email token is missing");
+    }
+    if (!verificationcode) {
+      throw new ApiError(400, "Verification code is required");
+    }
+    const user = await User.findOne({ email: emailToken });
+    if (!user) {
+      throw new ApiError(404, "User not found");
+    }
+    if (user.isVerified) {
+      throw new ApiError(400, "User is already verified");
+    }
+    if (user.verificationcode !== verificationcode) {
+      throw new ApiError(400, "Invalid verification code");
+    }
+    user.isVerified = true;
+    await user.save({ validateBeforeSave: false });
+
+    return res.status(200).json(new ApiResponse(200, user, "User verified successfully"));
+  } catch (error) {
+    throw new ApiError(
+      error.statusCode || 500,
+      error.message || "Internal Server Error"
+    );
+  }
+});
+
+
+export { registerUser, verifyUser };

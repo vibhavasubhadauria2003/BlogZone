@@ -5,7 +5,7 @@ import bcrypt from "bcrypt";
 
 const userSchema = new Schema(
   {
-    userName: {
+    email: {
       type: String,
       required: true,
       unique: true,
@@ -17,6 +17,7 @@ const userSchema = new Schema(
       required: true,
       trim: true,
     },
+    
     profileImage: {
       type: String, //cloudinary url
       required: true,
@@ -35,6 +36,13 @@ const userSchema = new Schema(
         type: String,
         required: true,
         trim: true,
+    },
+    isVerified: {
+        type: Boolean,
+        default: false,
+    },
+    verificationcode: {
+        type: String,
     },
   },
   {
