@@ -24,7 +24,7 @@ import { sendEmail } from "../utils/SendMail.js";
 const registerUser = asyncHandler(async (req, res) => {
   try {
     const { email, fullName, dob, gender, password } = req.body;
-    if (!fullName || !email || !password) {
+    if (!fullName || !email || !password|| !dob || !gender) {
       throw new ApiError(400, "All fields are required");
     }
     // Check if user already exists
@@ -34,7 +34,7 @@ const registerUser = asyncHandler(async (req, res) => {
     }
     const profileImagePath = req.files?.profileImage[0]?.path;
     if (!profileImagePath) {
-      throw new ApiError(400, "Profile Image file file is required");
+      throw new ApiError(400, "Profile Image file is required");
     }
     console.log(profileImagePath);
     const profileImage = await uploadOnCloudinary(profileImagePath);

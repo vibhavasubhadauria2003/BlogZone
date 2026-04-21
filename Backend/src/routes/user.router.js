@@ -1,14 +1,12 @@
 import { Router } from "express";
 
 import { upload } from "../middlewares/multer.middleware.js";
-import {
-  verifyUser,
-} from "../middlewares/authenticate.middleware.js";
-import { registerUser } from "../controllers/user.controller.js";
+
+import { registerUser, verifyUser } from "../controllers/user.controller.js";
 
 const userRouter = Router();
 
-userRouter.route("/registers").post(
+userRouter.route("/register").post(
   upload.fields([
     {
       name: "profileImage",
@@ -17,7 +15,5 @@ userRouter.route("/registers").post(
   ]),
   registerUser
 );
-
-
 
 export { userRouter };

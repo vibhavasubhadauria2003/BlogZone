@@ -25,6 +25,7 @@ import fs from "fs";
                 return uploadresult
             }
         } catch (error) {
+            console.log("Error while uploading on cloudinary ",error);
             fs.unlinkSync(localFilePath);//to delete file from server
             return null;
         }
