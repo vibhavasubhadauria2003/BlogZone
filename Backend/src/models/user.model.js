@@ -37,23 +37,28 @@ const userSchema = new Schema(
         required: true,
         trim: true,
     },
+    
+    verificationcode: {
+        type: String,
+        trim: true,
+    },
     isVerified: {
         type: Boolean,
         default: false,
     },
-    verificationcode: {
+    refreshToken: {
         type: String,
-    },
+        trim: true,
+    }
   },
   {
     timestamps: true,
   }
 );
-userSchema.pre("save", async function (next) {
+userSchema.pre("save", async function () {
   if (this.isModified("password")) {// isModified is used to check weather password is changed or not so hashing must run if password is changed
     this.password = await bcrypt.hash(this.password,11);
   }
-  next();
 });
 
 userSchema.methods.isPasswordCorrect = async function (password) {
@@ -64,7 +69,6 @@ userSchema.methods.generateAccessToken= function(){
   return jwt.sign(
     {
       _id:this._id,
-      userName:this.userName,
       fullName:this.fullName,
       dob:this.dob,
       gender:this.gender,

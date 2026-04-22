@@ -9,7 +9,7 @@ app.use(cors({
 }))
 app.use(express.static('views'));
 app.use(express.static('public'));
-app.set('view engine', 'ejs');
+//app.set('view engine', 'ejs');
 
 app.use(bodyParser.json()); // Parse JSON data
 app.use(express.urlencoded({ extended: true }));
