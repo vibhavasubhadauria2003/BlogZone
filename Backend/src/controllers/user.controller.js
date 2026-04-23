@@ -9,10 +9,7 @@ const generateAccessandRefreshToken = async (userId) => {
   try {
     const user = await User.findById(userId);
     const userAccessToken = await user.generateAccessToken();
-    const userRefreshToken = await user.generateRefreshToken();
-    user.refreshToken = userRefreshToken;
-    await user.save({ validateBeforeSave: false });
-    return { userAccessToken, userRefreshToken };
+    return { userAccessToken };
   } catch (error) {
     throw new ApiError(
       500,
@@ -151,7 +148,7 @@ const loginUser = asyncHandler(async (req, res) => {
   if (!isPasswordValid) {
     throw new ApiError(401, "Password incorrect");
   }
-  const { userAccessToken, userRefreshToken } = await generateAccessandRefreshToken(
+  const { userAccessToken } = await generateAccessandRefreshToken(
     user._id
   );
   const updatedUser = await User.findById(user._id).select(
@@ -165,8 +162,32 @@ const loginUser = asyncHandler(async (req, res) => {
   return res
     .status(200)
     .cookie("userAccessToken", userAccessToken, options)
-    .cookie("userRefreshToken", userRefreshToken, options)
     .json(new ApiResponse(200, updatedUser, "User logged in successfully"));
 });
 
-export { registerUser, verifyUser ,loginUser};
+
+const logoutUser = asyncHandler(async (req, res) => {
+  const options = {
+    httpOnly: true, 
+    secure: true,
+    sameSite: "lax",
+    expires: new Date(0),
+  };
+  return res
+    .status(200)
+    .clearCookie("userAccessToken", options)
+    .json(new ApiResponse(200, null, "User logged out successfully"));
+});
+
+const getUserProfile = asyncHandler(async (req, res) => {
+  console.log(req.user_email);
+  const user= await User.findOne({ email: req.user_email }).select("-password -refreshToken");
+  if(!user){
+    throw new ApiError(404,"User not found Please login again");
+  }
+  return res
+    .status(200)
+    .json(new ApiResponse(200, user, "User profile retrieved successfully"));
+});
+
+export { registerUser, verifyUser ,loginUser, logoutUser, getUserProfile};

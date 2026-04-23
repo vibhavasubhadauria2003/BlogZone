@@ -15,7 +15,7 @@ userRouter.route("/register").post(
   ]),
   registerUser
 );
-userRouter.route("/verify").post(verifyUser);
+userRouter.route("/register/verify").post(verifyUser);
 userRouter.route("/login").post(loginUser);
 
 export { userRouter };
