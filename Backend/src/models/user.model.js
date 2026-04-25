@@ -12,6 +12,12 @@ const userSchema = new Schema(
       trim: true,
       index:true//index:true is used make attribute searchable easily
     },
+    userName: {
+      type: String,
+      required: true,
+      trim: true,
+      unique: true,
+    },
     fullName: {
       type: String,
       required: true,
@@ -20,7 +26,7 @@ const userSchema = new Schema(
     
     profileImage: {
       type: String, //cloudinary url
-      required: true,
+      trim: true,
     },
     dob: {
       type: Date,
@@ -36,15 +42,6 @@ const userSchema = new Schema(
         type: String,
         required: true,
         trim: true,
-    },
-    
-    verificationcode: {
-        type: String,
-        trim: true,
-    },
-    isVerified: {
-        type: Boolean,
-        default: false,
     },
   },
   {
@@ -64,7 +61,9 @@ userSchema.methods.isPasswordCorrect = async function (password) {
 userSchema.methods.generateAccessToken= function(){
   return jwt.sign(
     {
-      _id:this._id,
+      _id: this._id,
+      email: this.email,
+      userName:this.userName, 
       fullName:this.fullName,
       dob:this.dob,
       gender:this.gender,
@@ -72,17 +71,6 @@ userSchema.methods.generateAccessToken= function(){
     process.env.ACCESS_TOKEN_SECRET,
     {
       expiresIn:process.env.ACCESS_TOKEN_EXPIRY
-    }
-  )
-}
-userSchema.methods.generateRefreshToken= function(){
-  return jwt.sign(
-    {
-      _id:this._id,
-    },
-    process.env.REFRESH_TOKEN_SECRET,
-    {
-      expiresIn:process.env.REFRESH_TOKEN_EXPIRY
     }
   )
 }
