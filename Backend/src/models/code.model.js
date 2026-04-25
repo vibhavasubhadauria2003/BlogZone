@@ -12,6 +12,10 @@ const codeSchema = new Schema(
         required: true,
         trim: true,
     },
+    isVerified: {
+        type: Boolean,
+        default: false,
+    },
   },
   {
     timestamps: true,

@@ -20,7 +20,7 @@ const generateAccessandRefreshToken = async (userId) => {
   }
 };
 
-const verifyUser = asyncHandler(async (req, res) => {
+const sendVerificationCode = asyncHandler(async (req, res) => {
   const { email } = req.body;
   if (!email) {
     throw new ApiError(400, "Email is required");
@@ -43,6 +43,7 @@ const verifyUser = asyncHandler(async (req, res) => {
     const code = await Code.create({
       email,
       verificationcode,
+      isVerified: false,
     });
     if (!code) {
       throw new ApiError(500, "Error while inputing verification code on DB");
@@ -78,13 +79,44 @@ const verifyUser = asyncHandler(async (req, res) => {
   }
 });
 
+const verifyUser = asyncHandler(async (req, res) => {
+  const { email, verificationcode } = req.body;
+  if (!email || !verificationcode) {
+    throw new ApiError(400, "Email and verification code are required");
+  }
+  const code = await Code.findOne({ email });
+  if (!code) {
+    throw new ApiError(404, "Verification code not found for this email");
+  }
+  if (code.verificationcode !== verificationcode) {
+    throw new ApiError(400, "Invalid verification code");
+  }
+
+  try {
+    const updatedCode = await Code.findByIdAndUpdate(code._id, 
+      { 
+        isVerified: true 
+      },
+      { 
+        new: true
+      }
+    );
+  } catch (error) {
+    console.error("Error while updating verification code status: ", error);
+    throw new ApiError(500, "Error while verifying code on DB");
+  }
+  return res
+    .status(200)
+    .json(new ApiResponse(200, null, "Verification code is valid"));
+});
+
 const registerUser = asyncHandler(async (req, res) => {
-  const { email, userName, fullName, dob, gender, password, verificationcode } = req.body;
-  if (!fullName ||!userName || !email || !password || !dob || !gender || !verificationcode) {
+  const { email, userName, fullName, dob, gender, password } = req.body;
+  if (!fullName ||!userName || !email || !password || !dob || !gender) {
     throw new ApiError(400, "All fields are required");
   }
   // Check if user already exists
-  console.log(email, userName, fullName, dob, gender, password, verificationcode);
+  console.log(email, userName, fullName, dob, gender, password);
   let existingUser = await User.findOne({ email });
   if (existingUser) {
     throw new ApiError(409, "User with this email already exists");
@@ -98,8 +130,8 @@ const registerUser = asyncHandler(async (req, res) => {
   if (!code) {
     throw new ApiError(404, "Verification code not found for this email");
   }
-  if (code.verificationcode !== verificationcode) {
-    throw new ApiError(400, "Invalid verification code");
+  if (!code.isVerified) {
+    throw new ApiError(400, "Email not verified. Please verify your email before registering");
   }
   try {
     const user = await User.create({
@@ -201,4 +233,4 @@ const updateProfileImage = asyncHandler(async (req, res) => {
   }
 });
 
-export { registerUser, verifyUser, loginUser, logoutUser, getUserProfile, updateProfileImage };
+export { registerUser, sendVerificationCode,verifyUser, loginUser, logoutUser, getUserProfile, updateProfileImage };
