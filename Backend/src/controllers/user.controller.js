@@ -81,6 +81,12 @@ const sendVerificationCode = asyncHandler(async (req, res) => {
 
 const verifyUser = asyncHandler(async (req, res) => {
   const { email, verificationcode } = req.body;
+  console.log(
+    "Verifying user with email: ",
+    email,
+    " and code: ",
+    verificationcode
+  );
   if (!email || !verificationcode) {
     throw new ApiError(400, "Email and verification code are required");
   }
@@ -93,12 +99,13 @@ const verifyUser = asyncHandler(async (req, res) => {
   }
 
   try {
-    const updatedCode = await Code.findByIdAndUpdate(code._id, 
-      { 
-        isVerified: true 
+    const updatedCode = await Code.findByIdAndUpdate(
+      code._id,
+      {
+        isVerified: true,
       },
-      { 
-        new: true
+      {
+        new: true,
       }
     );
   } catch (error) {
@@ -112,7 +119,7 @@ const verifyUser = asyncHandler(async (req, res) => {
 
 const registerUser = asyncHandler(async (req, res) => {
   const { email, userName, fullName, dob, gender, password } = req.body;
-  if (!fullName ||!userName || !email || !password || !dob || !gender) {
+  if (!fullName || !userName || !email || !password || !dob || !gender) {
     throw new ApiError(400, "All fields are required");
   }
   // Check if user already exists
@@ -126,12 +133,15 @@ const registerUser = asyncHandler(async (req, res) => {
     throw new ApiError(409, "User with this username already exists");
   }
   console.log("User does not exist, proceeding with registration");
-  const code = await Code.findOne({ email});
+  const code = await Code.findOne({ email });
   if (!code) {
     throw new ApiError(404, "Verification code not found for this email");
   }
   if (!code.isVerified) {
-    throw new ApiError(400, "Email not verified. Please verify your email before registering");
+    throw new ApiError(
+      400,
+      "Email not verified. Please verify your email before registering"
+    );
   }
   try {
     const user = await User.create({
@@ -214,7 +224,7 @@ const logoutUser = asyncHandler(async (req, res) => {
 });
 
 const getUserProfile = asyncHandler(async (req, res) => {
-  console.log(req.user_email);
+  console.log("user email : ", req.user_email);
   const user = await User.findOne({ email: req.user_email }).select(
     "-password -refreshToken"
   );
@@ -233,4 +243,12 @@ const updateProfileImage = asyncHandler(async (req, res) => {
   }
 });
 
-export { registerUser, sendVerificationCode,verifyUser, loginUser, logoutUser, getUserProfile, updateProfileImage };
+export {
+  registerUser,
+  sendVerificationCode,
+  verifyUser,
+  loginUser,
+  logoutUser,
+  getUserProfile,
+  updateProfileImage,
+};

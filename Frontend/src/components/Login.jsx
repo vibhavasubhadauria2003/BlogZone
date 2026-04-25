@@ -4,22 +4,22 @@ import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 
 function Login() {
-  const [username, setUsername] = React.useState("");
+  const [email, setEmail] = React.useState("");
   const [password, setPassword] = React.useState("");
   const navigate = useNavigate();
   async function submitHandler(e) {
     e.preventDefault();
     const data = {
-      person_username: username,
-      person_password: password,
+      email,
+      password,
     };
     console.log(data);
 
     try {
       const response = await axios.post(
-        "http://localhost:9000/person/login-person",
+        "http://localhost:9000/users/login",
         data,
-        { withCredentials: true }
+        { withCredentials: true },
       );
       toast.success("Logged in successfully");
       console.log(response);
@@ -52,10 +52,10 @@ function Login() {
         >
           <input
             type="text"
-            placeholder="Enter username"
-            value={username}
+            placeholder="Enter email"
+            value={email}
             required
-            onChange={(e) => setUsername(e.target.value)}
+            onChange={(e) => setEmail(e.target.value)}
             className="border border-gray-200 rounded-md w-full p-[10px_20px] bg-gray-200 text-black placeholder:text-black outline-none"
           />
           <input

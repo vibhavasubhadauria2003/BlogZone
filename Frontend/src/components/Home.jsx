@@ -1,100 +1,77 @@
 import React, { useState } from "react";
 import Post from "./Post";
 import { IoMdCreate } from "react-icons/io";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import axios from "axios";
+import Navbar from "./Navbar";
+import { useDispatch } from "react-redux";
+import { setUserData } from "../redux/slices/user.slice";
 
 function Home() {
-  const [currentTab, setCurrentTab] = useState("All Posts");
-  const [active, setActive] = useState(false);
-
   const navigate = useNavigate("");
 
   const [posts, setPosts] = useState([]);
   const [user, setUser] = useState([]);
   const [likedPosts, setLikedPosts] = useState([]);
+  const dispatch = useDispatch();
+
+  // React.useEffect(() => {
+  //   const fetchPosts = async () => {
+  //     try {
+  //       const response = await axios.get(
+  //         "http://localhost:9000/post/getAllPosts",
+  //         {
+  //           withCredentials: true,
+  //         },
+  //       );
+  //       setPosts(response.data.data.posts);
+  //       setUser(response.data.data.person);
+  //     } catch (err) {
+  //       console.error("Error fetching posts:", err);
+  //     }
+  //   };
+
+  //   fetchPosts();
+  // }, []);
+
+  // React.useEffect(() => {
+  //   const fetchLikedPosts = async () => {
+  //     try {
+  //       const response = await axios.get(
+  //         "http://localhost:9000/post/getLikedPosts",
+  //         { withCredentials: true },
+  //       );
+  //       console.log("Liked response : " + response);
+  //       setLikedPosts(response.data.message.likedPosts || []);
+  //     } catch (err) {
+  //       console.error("Error fetching liked posts:", err);
+  //     }
+  //   };
+  //   fetchLikedPosts();
+  // }, []);
 
   React.useEffect(() => {
-    const fetchPosts = async () => {
+    const getCurrentUser = async () => {
       try {
-        const response = await axios.get(
-          "http://localhost:9000/post/getAllPosts",
-          {
-            withCredentials: true,
-          }
-        );
-        setPosts(response.data.data.posts);
-        setUser(response.data.data.person);
-      } catch (err) {
-        console.error("Error fetching posts:", err);
-      }
-    };
+        const response = await axios.get("http://localhost:9000/users", {
+          withCredentials: true,
+        });
 
-    fetchPosts();
-  }, []);
-
-  React.useEffect(() => {
-    const fetchLikedPosts = async () => {
-      try {
-        const response = await axios.get(
-          "http://localhost:9000/post/getLikedPosts",
-          { withCredentials: true }
-        );
-        console.log("Liked response : " + response);
-        setLikedPosts(response.data.message.likedPosts || []);
+        console.log("Current User Response: ", response.data.data);
+        dispatch(setUserData(response.data.data));
       } catch (err) {
         console.error("Error fetching liked posts:", err);
       }
     };
-    fetchLikedPosts();
+    getCurrentUser();
   }, []);
 
-  console.log("psots:", posts);
+  //console.log("posts:", posts);
   return (
     <div className="h-screen flex flex-col items-center w-screen bg-gray-950">
-      <div className="w-full flex justify-center p-5">
-        <div className="w-[85%] flex justify-between items-center">
-          <h1 className="text-3xl text-gray-300 cursor-pointer">openPost.</h1>{" "}
-          <div className="flex justify-between text-gray-200 w-[30%] uppercase">
-            <h1
-              className={`cursor-pointer ${
-                currentTab === "All Posts" && "text-blue-600"
-              }`}
-              onClick={() => {
-                setCurrentTab("All Posts");
-                setActive(false);
-              }}
-            >
-              All Posts
-            </h1>
-            <h1
-              className={`cursor-pointer ${
-                currentTab === "Your Posts" && "text-blue-600"
-              }`}
-              onClick={() => {
-                setCurrentTab("Your Posts");
-                setActive(true);
-              }}
-            >
-              Your Posts
-            </h1>
-            <h1
-              className="cursor-pointer"
-              onClick={() => navigate("/create-post")}
-            >
-              <span>Create Post</span>
-            </h1>
+      <Navbar />
 
-            <div
-              onClick={() => navigate("/profile")}
-              className="cursor-pointer"
-            >
-              Profile
-            </div>
-          </div>
-        </div>
-      </div>
-      {currentTab == "All Posts" && (
+      {/* {currentTab == "All Posts" && (
         <div className="w-[85%] mt-12 pb-[30px] flex flex-wrap gap-8 justify-center items-center">
           {posts.length === 0 ? (
             <div className="flex flex-col mt-[200px] justify-center items-center gap-5">
@@ -121,8 +98,8 @@ function Home() {
             ))
           )}
         </div>
-      )}
-      {currentTab == "Your Posts" && (
+      )} */}
+      {/* {currentTab == "Your Posts" && (
         <div className="w-[85%] mt-12 pb-[30px] flex flex-wrap gap-8 justify-center items-center">
           {posts.length === 0 ? (
             <div className="flex flex-col mt-[200px] justify-center items-center gap-5">
@@ -156,7 +133,7 @@ function Home() {
             })
           )}
         </div>
-      )}
+      )} */}
     </div>
   );
 }

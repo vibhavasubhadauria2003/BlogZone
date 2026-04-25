@@ -6,6 +6,7 @@ import Home from "./components/Home";
 import CreatePost from "./components/CreatePost";
 import Profile from "./components/Profile";
 import Authenticate from "./components/Authenticate";
+import Posts from "./components/Posts";
 
 function App() {
   return (
@@ -19,6 +20,14 @@ function App() {
           element={
             <Authenticate>
               <Home />
+            </Authenticate>
+          }
+        ></Route>
+        <Route
+          path="/your-posts"
+          element={
+            <Authenticate>
+              <Posts />
             </Authenticate>
           }
         ></Route>

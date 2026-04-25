@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
+import { MdVerified } from "react-icons/md";
 function Signup() {
   const [username, setUsername] = useState("");
   const [firstName, setFirstName] = useState("");
@@ -10,27 +11,42 @@ function Signup() {
   const [password, setPassword] = useState("");
   const [gender, setGender] = useState("");
   const [dob, setDob] = useState("");
+  const [isVerified, setIsVerified] = useState(false);
+  const [isOtpSent, setOtpSent] = useState(false);
+  const [otp, setOtp] = useState("");
 
   const navigate = useNavigate();
   async function submitHandler(e) {
     e.preventDefault();
+    let isAdult = false;
+    if (dob) {
+      const today = new Date();
+      const birthDate = new Date(dob);
+      let age = today.getFullYear() - birthDate.getFullYear();
+      const m = today.getMonth() - birthDate.getMonth();
+      if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+        age--;
+      }
+      isAdult = age >= 18;
+    }
+    if (!isAdult) {
+      toast.error("You must be at least 18 years old to register.");
+      return;
+    }
     const data = {
-      person_username: username,
-      person_fname: firstName,
-      person_lname: lastName,
-      person_email: email,
-      person_dob: dob,
-      person_gender: gender,
-      person_password: password,
+      userName: username,
+      fullName: `${firstName} ${lastName}`,
+      email: email,
+      dob: dob,
+      gender: gender,
+      password: password,
     };
     console.log(data);
 
     try {
-      const response = await axios.post(
-        "http://localhost:9000/person/register-person",
-        data,
-        { withCredentials: true }
-      );
+      const response = await axios.post("http://localhost:9000/users", data, {
+        withCredentials: true,
+      });
       toast.success("Registered successfully");
       setTimeout(() => {
         navigate("/login");
@@ -41,6 +57,53 @@ function Signup() {
       toast.error("Signup failed. Please try again.");
     }
   }
+
+  const verifyEmail = async () => {
+    try {
+      if (email) {
+        const response = await axios.post(
+          "http://localhost:9000/users/send-verification-code",
+          {
+            email,
+          },
+          {
+            withCredentials: true,
+          },
+        );
+        console.log("Email Verification : ", response);
+        setOtpSent(true);
+        toast.success("OTP sent successfully");
+      } else {
+        toast.error("Email is required");
+      }
+    } catch (e) {
+      console.log(e);
+    }
+  };
+
+  const verifyOTP = async () => {
+    try {
+      if (otp) {
+        const response = await axios.post(
+          "http://localhost:9000/users/verify",
+          {
+            email: email,
+            verificationcode: otp,
+          },
+          {
+            withCredentials: true,
+          },
+        );
+        console.log("Email Verification : ", response);
+        setOtpSent(false);
+        setIsVerified(true);
+      } else {
+        toast.error("OTP is required");
+      }
+    } catch (e) {
+      console.log(e);
+    }
+  };
   return (
     <div className="h-screen w-screen flex flex-col items-center bg-gray-950">
       <div className="w-[85%] flex mt-4 justify-between items-center">
@@ -56,10 +119,7 @@ function Signup() {
       </div>
       <div className="flex mt-10 mb-10 flex-col gap-5 w-[700px] shadow-2xl shadow-gray-900 border border-gray-200 rounded-2xl p-5 items-center">
         <h1 className="text-5xl  text-gray-200">Signup</h1>
-        <form
-          className="flex flex-col w-[80%] gap-5 mt-8 items-center"
-          onSubmit={submitHandler}
-        >
+        <form className="flex flex-col w-[80%] gap-5 mt-8 items-center">
           <input
             type="text"
             placeholder="Enter username"
@@ -90,6 +150,34 @@ function Signup() {
             onChange={(e) => setEmail(e.target.value)}
             className="border border-gray-200 w-full rounded-md p-[10px_20px] bg-gray-200 text-black placeholder:text-black outline-none"
           />
+          {isOtpSent && (
+            <input
+              type="text"
+              placeholder="Enter OTP"
+              value={otp}
+              onChange={(e) => setOtp(e.target.value)}
+              className="border border-gray-200 w-full rounded-md p-[10px_20px] bg-gray-200 text-black placeholder:text-black outline-none"
+            />
+          )}
+          {isOtpSent && !isVerified && (
+            <button
+              onClick={verifyOTP}
+              type="button"
+              className={` p-[10px_20px]  w-full text-gray-200 rounded-lg bg-blue-600 cursor-pointer`}
+            >
+              Verify OTP
+            </button>
+          )}
+          {
+            <button
+              type="button"
+              className={` p-[10px_20px] flex gap-2 items-center justify-center w-full text-gray-200 rounded-lg ${isOtpSent ? "hidden" : isVerified ? "bg-green-600 cursor-not-allowed" : "bg-blue-600 cursor-pointer"}`}
+              onClick={verifyEmail}
+            >
+              {isVerified ? "Verified" : "Verify Email"}
+              {isVerified && <MdVerified size={22} />}
+            </button>
+          }
           <input
             type="password"
             placeholder="Enter password"
@@ -120,7 +208,10 @@ function Signup() {
             className="border border-gray-200 rounded-md w-full p-[10px_20px] bg-gray-200 text-black placeholder:text-black outline-none"
           />
 
-          <button className="mt-5 p-[10px_20px] cursor-pointer w-full text-gray-200 rounded-lg bg-blue-600">
+          <button
+            onClick={submitHandler}
+            className="mt-5 p-[10px_20px] cursor-pointer w-full text-gray-200 rounded-lg bg-blue-600"
+          >
             Create account
           </button>
           <p className="text-lg text-gray-200 opacity-80">
