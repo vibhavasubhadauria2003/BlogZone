@@ -4,6 +4,8 @@ import { ApiError } from "../utils/ApiError.js";
 import { User } from "../models/user.model.js";
 import { Code } from "../models/code.model.js";
 import { Post } from "../models/post.model.js";
+import { Like } from "../models/like.model.js";
+import { Comment } from "../models/comment.model.js";
 import { uploadOnCloudinary, deleteOnCloudinary } from "../utils/Cloudinary.js";
 import { sendEmail } from "../utils/SendMail.js";
 import e from "express";
@@ -326,6 +328,43 @@ const uploadPost = asyncHandler(async (req, res) => {
     throw new ApiError(500, "Error while uploading post");
   }
 });
+const likePost = asyncHandler(async (req, res) => {
+  const user = await User.findOne({ email: req.email });
+  if (!user) {
+    throw new ApiError(404, "User not found Please login again");
+  }
+  const { postId } = req.body;
+  if (!postId) {
+    throw new ApiError(400, "Post ID is required");
+  }
+  try {
+    const post = await Post.findById(postId);
+    if (!post) {
+      throw new ApiError(404, "Post not found");
+    }
+    const existingLike = await Like.findOne({ user: user._id, post: postId });
+    if (existingLike) {
+      await Like.findByIdAndDelete(existingLike._id);
+      post.likesCount = Math.max(0, post.likesCount - 1);
+      console.log("Post unliked by user: ", user.email);
+    }
+      else {
+      await Like.create({ 
+        user: user._id, 
+        post: postId 
+      });
+      post.likesCount += 1;
+      console.log("Post liked by user: ", user.email);
+    }
+    await post.save();
+    return res
+      .status(200)
+      .json(new ApiResponse(200,  post , "Post liked/unliked successfully"));
+  } catch (error) {
+    console.error("Error while liking/unliking post: ", error);
+    throw new ApiError(500, "Error while liking/unliking post");
+  }
+});
 
 export {
   registerUser,
@@ -336,4 +375,5 @@ export {
   getUserProfile,
   updateUser,
   uploadPost,
+  likePost
 };
