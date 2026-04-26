@@ -2,7 +2,7 @@ import jwt from "jsonwebtoken";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiError } from "../utils/ApiError.js";
 
-const verifyUser = asyncHandler(async (req, res, next) => {
+const authUser = asyncHandler(async (req, res, next) => {
   const token = req.cookies?.userAccessToken;
 
   console.log("Token from cookie:", token);
@@ -18,15 +18,15 @@ const verifyUser = asyncHandler(async (req, res, next) => {
     throw new ApiError(401, "Invalid or expired token");
   }
 
-  const user = decodedToken?.email;
+  const user = decodedToken;
 
   if (!user) {
-    throw new ApiError(401, "Unauthorized access");
-  }
-
-  req.user_email = user;
+    throw new ApiError(401, "User not found in token");
+  } 
+  req.email = user.email;
+  req._id = user._id;
 
   next();
 });
 
-export default verifyUser;
+export default authUser;

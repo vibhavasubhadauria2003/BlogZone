@@ -151,6 +151,7 @@ const registerUser = asyncHandler(async (req, res) => {
       dob,
       gender,
       password,
+      profileImage: "https://res.cloudinary.com/dcak9wrg6/image/upload/v1745732022/ltc5yucvghro4j2zo6ek.jpg",
     });
     if (!user) {
       throw new ApiError(500, "Error while registering on DB");
@@ -224,22 +225,68 @@ const logoutUser = asyncHandler(async (req, res) => {
 });
 
 const getUserProfile = asyncHandler(async (req, res) => {
-  console.log("user email : ", req.user_email);
-  const user = await User.findOne({ email: req.user_email }).select(
-    "-password -refreshToken"
-  );
-  if (!user) {
-    throw new ApiError(404, "User not found Please login again");
-  }
+  console.log("user email : ", req.email);
+  try {
+    const user = await User.findOne({ email: req.email }).select(
+      "-password"
+    );
+    if (!user) {
+      throw new ApiError(404, "User not found Please login again");
+    }
+    console.log("User profile retrieved: ", user);
+    const options = {
+    httpOnly: true,
+    secure: true,
+    sameSite: "lax",
+  };
   return res
     .status(200)
     .json(new ApiResponse(200, user, "User profile retrieved successfully"));
+  } catch (error) {
+    console.error("Error while fetching user profile: ", error);
+    throw new ApiError(500, "Error while fetching user profile");
+  }
+  
 });
 
-const updateProfileImage = asyncHandler(async (req, res) => {
-  const profileImage = req.files?.profileImage?.[0];
+const updateUser = asyncHandler(async (req, res) => {
+  const user = await User.findOne({ email: req.email });
+  if (!user) {
+    throw new ApiError(404, "User not found Please login again");
+  }
+  console.log("User found for update: ", user);
+  const { fullName, dob, gender } = req.body;
+  const profileImagePath = req.files?.profileImage?.[0].path || null;
+  if (!profileImagePath) {
+    console.error("Profile image not found in request: ", req.files);
+  }
+  console.log(profileImagePath);
+  const profileImage = await uploadOnCloudinary(profileImagePath);
+  console.log(profileImage);
   if (!profileImage) {
-    throw new ApiError(400, "Profile image is required");
+    console.error("Error while uploading profile image to Cloudinary");
+  }
+  try {
+    const updatedUser = await User.findByIdAndUpdate(
+      user._id,
+      {
+        fullName: fullName || user.fullName,
+        dob: dob || user.dob,
+        gender: gender || user.gender,
+        profileImage: profileImage?.url || user.profileImage,
+      },
+      { new: true }
+    ).select("-password -refreshToken");
+    if (!updatedUser) {
+      throw new ApiError(500, "Error while updating user on DB");
+    }
+    console.log("User updated successfully: ", updatedUser);
+    return res
+      .status(200)
+      .json(new ApiResponse(200, updatedUser, "User updated successfully"));
+  } catch (error) {
+    console.error("Error while updating user: ", error);
+    throw new ApiError(500, "Error while updating user");
   }
 });
 
@@ -250,5 +297,5 @@ export {
   loginUser,
   logoutUser,
   getUserProfile,
-  updateProfileImage,
+  updateUser,
 };
