@@ -231,7 +231,122 @@ const logoutUser = asyncHandler(async (req, res) => {
 const getUserProfile = asyncHandler(async (req, res) => {
   console.log("user email : ", req.email);
   try {
-    const user = await User.findOne({ email: req.email }).select("-password");
+    const user = await User.aggregate([
+      {
+        $match: {
+          email: req.email,
+        },
+      },
+      {
+        $lookup: {
+          from: "posts",
+          localField: "_id",
+          foreignField: "author",
+          as: "posts",
+          pipeline: [
+            {
+              $lookup: {
+                from: "likes",
+                localField: "_id",
+                foreignField: "post",
+                as: "likeDetails",
+              },
+            },
+            {
+              $lookup: {
+                from: "users",
+                localField: "likeDetails.user",
+                foreignField: "_id",
+                as: "likedByUsers",
+                pipeline: [ 
+                  {
+                    $project: {
+                      _id: 1,
+                      email: 1,
+                      userName: 1,
+                      fullName: 1,
+                      profileImage: 1,
+                    },
+                  },
+                ],
+              },
+            },
+            {
+              $lookup: {
+                from: "comments",
+                localField: "_id",
+                foreignField: "post",
+                as: "commentDetails",
+                pipeline: [
+                  {
+                    $lookup: {
+                      from: "users",
+                      localField: "user",
+                      foreignField: "_id",
+                      as: "commenterDetails",
+                      pipeline: [
+                        {
+                          $project: {
+                            _id: 1,
+                            email: 1,
+                            userName: 1,
+                            fullName: 1,
+                            profileImage: 1,
+                          },
+                        },
+                      ],
+                    },
+                  },
+                  {
+                    $unwind: {
+                      path: "$commenterDetails",
+                      preserveNullAndEmptyArrays: true,
+                    },
+                  },
+                  {
+                    $project: {
+                      comment_text: 1,
+                      commenterId: "$commenterDetails._id",
+                      commenterEmail: "$commenterDetails.email",
+                      commenterUserName: "$commenterDetails.userName",
+                      commenterFullName: "$commenterDetails.fullName",
+                      commenterProfileImage: "$commenterDetails.profileImage",
+                    },
+                  },
+                ],
+              },
+            },
+          ],
+        },
+      },
+      {
+        $project: {
+          email: 1,
+          userName: 1,
+          fullName: 1,
+          dob: 1,
+          gender: 1,
+          profileImage: 1,
+          posts: {
+            $map: {
+              input: "$posts",
+              as: "post",
+              in: {
+                _id: "$$post._id",
+                content: "$$post.content",
+                image: "$$post.image",
+                likedByUsers: "$$post.likedByUsers",
+                commentDetails: "$$post.commentDetails",
+                likesCount: { $size: "$$post.likeDetails" },
+                commentsCount: { $size: "$$post.commentDetails" },
+              },
+            },
+
+          },
+          postsCount: { $size: "$posts" },
+        },
+      },
+    ]);
     if (!user) {
       throw new ApiError(404, "User not found Please login again");
     }
@@ -448,7 +563,24 @@ const getallPosts = asyncHandler(async (req, res) => {
                 foreignField: "_id",
                 as: "commenterDetails",
               },
+
             },
+            {
+              $unwind: {
+                path: "$commenterDetails",
+                preserveNullAndEmptyArrays: true
+              },
+            },
+            {
+              $project: {
+                comment_text: 1,
+                commenterId: "$commenterDetails._id",
+                commenterEmail: "$commenterDetails.email",
+                commenterUserName: "$commenterDetails.userName",
+                commenterFullName: "$commenterDetails.fullName",
+                commenterProfileImage: "$commenterDetails.profileImage",
+              },
+            }
           ],
         },
       },
@@ -464,16 +596,7 @@ const getallPosts = asyncHandler(async (req, res) => {
             fullName: 1,
             profileImage: 1,
           },
-          commentDetails: {
-            comment_text: 1,
-            commenterDetails: {
-              _id: 1,
-              email: 1,
-              userName: 1,
-              fullName: 1,
-              profileImage: 1,
-            },
-          },
+          commentDetails: 1,
           likesCount: { $size: "$likeDetails" },
           commentsCount: { $size: "$commentDetails" },
         },
@@ -541,7 +664,7 @@ const getMyPosts = asyncHandler(async (req, res) => {
         $project: {
           content: 1,
           image: 1,
-          
+
           likedByUsers: {
             _id: 1,
             email: 1,
