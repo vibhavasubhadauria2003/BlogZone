@@ -7,6 +7,7 @@ import CreatePost from "./components/CreatePost";
 import Profile from "./components/Profile";
 import Authenticate from "./components/Authenticate";
 import Posts from "./components/Posts";
+import EditProfile from "./components/EditProfile";
 
 function App() {
   return (
@@ -44,6 +45,15 @@ function App() {
           element={
             <Authenticate>
               <Profile />
+            </Authenticate>
+          }
+        ></Route>
+
+        <Route
+          path="/profile/edit"
+          element={
+            <Authenticate>
+              <EditProfile />
             </Authenticate>
           }
         ></Route>

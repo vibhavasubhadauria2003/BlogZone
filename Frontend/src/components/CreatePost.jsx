@@ -2,61 +2,110 @@ import React, { useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-hot-toast";
+import Navbar from "./Navbar";
+
 function CreatePost() {
   const [postContent, setPostContent] = useState("");
+  const [image, setImage] = useState(null);
+  const [preview, setPreview] = useState(null);
+  const [loading, setLoading] = useState(false);
+
   const navigate = useNavigate();
+
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    setImage(file);
+
+    if (file) {
+      setPreview(URL.createObjectURL(file));
+    }
+  };
+
   const submitHandler = async (e) => {
     e.preventDefault();
-    const data = {
-      post_content: postContent,
-    };
 
-    console.log(data);
-    const response = await axios.post(
-      "http://localhost:9000/post/create-post",
-      data,
-      { withCredentials: true }
-    );
-    console.log(response);
-    toast.success("Post created successfully");
-    navigate("/home");
+    if (!postContent && !image) {
+      toast.error("Add something to post");
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append("post_content", postContent);
+    if (image) formData.append("image", image);
+
+    try {
+      setLoading(true);
+
+      const response = await axios.post(
+        "http://localhost:9000/post/create-post",
+        formData,
+        {
+          withCredentials: true,
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        },
+      );
+
+      toast.success("Post created successfully 🚀");
+      navigate("/home");
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to create post");
+    } finally {
+      setLoading(false);
+    }
   };
+
   return (
-    <div className="h-screen w-screen flex justify-center bg-gray-950">
-      <div className="w-[80%] flex flex-col mt-10 items-center">
-        <h1 className="text-4xl text-gray-200 uppercase font-bold">
-          Create Post
+    <div className="min-h-screen bg-[#020617] text-white flex flex-col items-center">
+      <Navbar />
+      <div className="w-[90%] mt-[100px] max-w-2xl bg-gray-900/80 backdrop-blur-lg border border-gray-700 rounded-2xl shadow-2xl p-6">
+        {/* Title */}
+        <h1 className="text-3xl text-white font-bold text-center mb-6">
+          ✨ Create a Post
         </h1>
-        <form
-          action=""
-          className="flex flex-col w-[80%] gap-5 mt-8 items-center"
-          onSubmit={submitHandler}
-        >
+
+        <form onSubmit={submitHandler} className="flex flex-col gap-5">
+          {/* Textarea */}
           <textarea
-            name=""
-            id=""
             required
             value={postContent}
             onChange={(e) => setPostContent(e.target.value)}
-            placeholder="Write here your message..."
-            className="border border-gray-200 w-full h-[300px] rounded-md p-[10px_20px] text-gray-200 text-xl"
-          ></textarea>
+            placeholder="What's on your mind?"
+            className="w-full h-[180px] rounded-xl p-4 bg-gray-800 text-white text-lg outline-none border border-gray-700 focus:border-blue-500 transition"
+          />
 
-          <div className="flex gap-5">
+          {/* Image Upload */}
+          <label className="cursor-pointer border border-dashed border-gray-600 rounded-xl p-4 text-center text-gray-400 hover:border-blue-500 transition">
+            📷 Click to upload image
+            <input
+              type="file"
+              accept="image/*"
+              onChange={handleImageChange}
+              className="hidden"
+            />
+          </label>
+
+          {/* Preview */}
+          {preview && (
+            <img
+              src={preview}
+              alt="preview"
+              className="w-full h-60 object-cover rounded-xl border border-gray-700"
+            />
+          )}
+
+          {/* Buttons */}
+          <div className="flex justify-between gap-3 mt-4">
             <button
-              onClick={() => navigate("/home")}
-              className="mt-5 text-xl p-[10px_20px] w-[200px] cursor-pointer text-gray-200 rounded-lg border border-gray-200"
+              type="submit"
+              disabled={loading}
+              className={`w-full py-3 rounded-xl text-white font-semibold transition ${
+                loading ? "bg-gray-600" : "bg-blue-600 hover:bg-blue-700"
+              }`}
             >
-              Home
-            </button>
-            <button className="mt-5 text-xl p-[10px_20px] w-[200px] cursor-pointer text-gray-200 rounded-lg bg-blue-600">
-              Upload Post
-            </button>
-            <button
-              onClick={() => navigate("/profile")}
-              className="mt-5 text-xl p-[10px_20px] w-[200px] cursor-pointer text-gray-200 rounded-lg border border-gray-200"
-            >
-              Profile
+              {loading ? "Posting..." : "🚀 Post"}
             </button>
           </div>
         </form>

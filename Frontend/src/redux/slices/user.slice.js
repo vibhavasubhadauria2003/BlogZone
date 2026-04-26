@@ -3,13 +3,17 @@ const userSlice = createSlice({
   name: "user",
   initialState: {
     userData: null,
+    userPosts: [],
   },
   reducers: {
     setUserData: (state, action) => {
       state.userData = action.payload;
     },
+    setUserPosts: (state, action) => {
+      state.userPosts = action.payload;
+    },
   },
 });
 
-export const { setUserData } = userSlice.actions;
+export const { setUserData, setUserPosts } = userSlice.actions;
 export default userSlice.reducer;
