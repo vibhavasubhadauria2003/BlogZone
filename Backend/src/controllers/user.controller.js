@@ -403,7 +403,76 @@ const commentOnPost = asyncHandler(async (req, res) => {
     throw new ApiError(500, "Error while adding comment");
   }
 });
-
+const getallPosts = asyncHandler(async (req, res) => {
+  const user = await User.findOne({ email: req.email });
+  if (!user) {
+    throw new ApiError(404, "User not found Please login again");
+  }
+  try { 
+    const posts = await Post.aggregate([
+      {
+        $lookup: {
+          from: "users",
+          localField: "author",
+          foreignField: "_id",
+          as: "authorDetails",
+        },
+      },  
+      {
+        $project: {
+          content: 1,
+          image: 1,
+          likesCount: 1,
+          commentsCount: 1,
+          authorDetails: 1,
+        },
+      }
+    ]);
+    if (!posts) {
+      throw new ApiError(500, "Error while fetching posts from DB");
+    }
+    console.log("Posts retrieved successfully: ", posts);
+    return res
+      .status(200)
+      .json(new ApiResponse(200, posts, "Posts retrieved successfully"));
+  } catch (error) {
+    console.error("Error while fetching posts: ", error);
+    throw new ApiError(500, "Error while fetching posts");
+  }
+});
+const getMyPosts = asyncHandler(async (req, res) => {
+  const user = await User.findOne({ email: req.email });
+  if (!user) {
+    throw new ApiError(404, "User not found Please login again");
+  }
+  try {
+    const posts = await Post.aggregate([
+      {
+        $match: {
+          author: user._id,
+        },
+      },
+      {
+        $project: {
+          content: 1,
+          image: 1,
+          likesCount: 1,
+          commentsCount: 1,
+        },
+      }
+    ]);
+    if (!posts) {
+      throw new ApiError(500, "Error while fetching posts from DB");
+    }
+    console.log("My posts retrieved successfully: ", posts);
+    return res
+      .status(200)
+      .json(new ApiResponse(200, posts, "My posts retrieved successfully"));
+  } catch (error) {
+    console.error("Error while fetching my posts: ", error);
+    throw new ApiError(500, "Error while fetching my posts");
+  }
+});
 export {
   registerUser,
   sendVerificationCode,
@@ -415,4 +484,6 @@ export {
   uploadPost,
   likePost,
   commentOnPost,
+  getallPosts,
+  getMyPosts,
 };

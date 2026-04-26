@@ -13,6 +13,8 @@ import {
   uploadPost,
   likePost,
   commentOnPost,
+  getallPosts,
+  getMyPosts,
 } from "../controllers/user.controller.js";
 
 const userRouter = Router();
@@ -45,6 +47,8 @@ userRouter.route("/upload-post").post(
 );
 userRouter.route("/like").post(authUser, likePost);
 userRouter.route("/comment").post(authUser, commentOnPost);
+userRouter.route("/posts").get(authUser, getallPosts);
+userRouter.route("/my-posts").get(authUser, getMyPosts);
 userRouter.route("/").post(registerUser);
 userRouter.route("/").get(authUser, getUserProfile);
 
