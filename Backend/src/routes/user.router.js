@@ -10,6 +10,7 @@ import {
   updateUser,
   getUserProfile,
   logoutUser,
+  uploadPost,
 } from "../controllers/user.controller.js";
 
 const userRouter = Router();
@@ -32,6 +33,15 @@ userRouter.route("/update").patch(
   updateUser
 );
 userRouter.route("/logout").get(authUser, logoutUser);
-
+userRouter.route("/upload-post").post(
+  upload.fields([
+    {
+      name: "postImage",
+      maxCount: 1,
+    },
+  ]),
+  authUser,
+  uploadPost
+);
 
 export { userRouter };

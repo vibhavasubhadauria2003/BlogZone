@@ -3,6 +3,7 @@ import { ApiResponse } from "../utils/ApiResponse.js";
 import { ApiError } from "../utils/ApiError.js";
 import { User } from "../models/user.model.js";
 import { Code } from "../models/code.model.js";
+import { Post } from "../models/post.model.js";
 import { uploadOnCloudinary, deleteOnCloudinary } from "../utils/Cloudinary.js";
 import { sendEmail } from "../utils/SendMail.js";
 import e from "express";
@@ -151,7 +152,8 @@ const registerUser = asyncHandler(async (req, res) => {
       dob,
       gender,
       password,
-      profileImage: "https://res.cloudinary.com/dcak9wrg6/image/upload/v1745732022/ltc5yucvghro4j2zo6ek.jpg",
+      profileImage:
+        "https://res.cloudinary.com/dcak9wrg6/image/upload/v1745732022/ltc5yucvghro4j2zo6ek.jpg",
     });
     if (!user) {
       throw new ApiError(500, "Error while registering on DB");
@@ -227,26 +229,23 @@ const logoutUser = asyncHandler(async (req, res) => {
 const getUserProfile = asyncHandler(async (req, res) => {
   console.log("user email : ", req.email);
   try {
-    const user = await User.findOne({ email: req.email }).select(
-      "-password"
-    );
+    const user = await User.findOne({ email: req.email }).select("-password");
     if (!user) {
       throw new ApiError(404, "User not found Please login again");
     }
     console.log("User profile retrieved: ", user);
     const options = {
-    httpOnly: true,
-    secure: true,
-    sameSite: "lax",
-  };
-  return res
-    .status(200)
-    .json(new ApiResponse(200, user, "User profile retrieved successfully"));
+      httpOnly: true,
+      secure: true,
+      sameSite: "lax",
+    };
+    return res
+      .status(200)
+      .json(new ApiResponse(200, user, "User profile retrieved successfully"));
   } catch (error) {
     console.error("Error while fetching user profile: ", error);
     throw new ApiError(500, "Error while fetching user profile");
   }
-  
 });
 
 const updateUser = asyncHandler(async (req, res) => {
@@ -290,6 +289,44 @@ const updateUser = asyncHandler(async (req, res) => {
   }
 });
 
+const uploadPost = asyncHandler(async (req, res) => {
+  const user = await User.findOne({ email: req.email });
+  if (!user) {
+    throw new ApiError(404, "User not found Please login again");
+  }
+  console.log("User uploading post: ", user);
+  const { content } = req.body;
+  if (!content) {
+    throw new ApiError(400, "Post content is required");
+  }
+  const postImagePath = req.files?.postImage?.[0].path || null;
+  if (!postImagePath) {
+    console.error("Post image not found in request: ", req.files);
+  }
+  const postImage = await uploadOnCloudinary(postImagePath);
+  console.log(postImage);
+  if (!postImage) {
+    console.error("Error while uploading post image to Cloudinary");
+  }
+  try {
+    const post = await Post.create({
+      content,
+      image: postImage?.url || "",
+      author: user._id,
+    });
+    if (!post) {
+      throw new ApiError(500, "Error while uploading post on DB");
+    }
+    console.log("Post uploaded successfully: ", post);
+    return res
+      .status(200)
+      .json(new ApiResponse(200, post, "Post uploaded successfully"));
+  } catch (error) {
+    console.error("Error while uploading post: ", error);
+    throw new ApiError(500, "Error while uploading post");
+  }
+});
+
 export {
   registerUser,
   sendVerificationCode,
@@ -298,4 +335,5 @@ export {
   logoutUser,
   getUserProfile,
   updateUser,
+  uploadPost,
 };
