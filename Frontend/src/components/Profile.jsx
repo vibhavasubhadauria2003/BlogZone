@@ -41,7 +41,10 @@ function Profile() {
       <div className="relative w-[60%] mt-[50px] flex gap-10 p-[30px] border border-gray-800 rounded-2xl items-center hover:shadow-2xl hover:shadow-gray-900 transition-all ease-in-out duration-700">
         <div className="relative">
           <img
-            src="https://static.vecteezy.com/system/resources/thumbnails/033/129/417/small/a-business-man-stands-against-white-background-with-his-arms-crossed-ai-generative-photo.jpg"
+            src={
+              userData?.profileImage ||
+              "https://static.vecteezy.com/system/resources/thumbnails/033/129/417/small/a-business-man-stands-against-white-background-with-his-arms-crossed-ai-generative-photo.jpg"
+            }
             alt=""
             className="w-[200px] h-[200px] rounded-full object-cover"
           />

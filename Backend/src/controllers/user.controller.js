@@ -258,15 +258,12 @@ const updateUser = asyncHandler(async (req, res) => {
   console.log("User found for update: ", user);
   const { fullName, dob, gender } = req.body;
   const profileImagePath = req.files?.profileImage?.[0].path || null;
-  if (!profileImagePath) {
-    console.error("Profile image not found in request: ", req.files);
-  }
-  console.log(profileImagePath);
-  const profileImage = await uploadOnCloudinary(profileImagePath);
+
+  let profileImage;
+  if (profileImagePath)
+    profileImage = await uploadOnCloudinary(profileImagePath);
   console.log(profileImage);
-  if (!profileImage) {
-    console.error("Error while uploading profile image to Cloudinary");
-  }
+
   try {
     const updatedUser = await User.findByIdAndUpdate(
       user._id,
@@ -274,7 +271,7 @@ const updateUser = asyncHandler(async (req, res) => {
         fullName: fullName || user.fullName,
         dob: dob || user.dob,
         gender: gender || user.gender,
-        profileImage: profileImage?.url || user.profileImage,
+        profileImage: profileImage?.url || user?.profileImage || "",
       },
       { new: true }
     ).select("-password -refreshToken");
@@ -292,7 +289,9 @@ const updateUser = asyncHandler(async (req, res) => {
 });
 
 const uploadPost = asyncHandler(async (req, res) => {
+  console.log("User email from token: ", req.email);
   const user = await User.findOne({ email: req.email });
+  console.log("User found for uploading post: ", user);
   if (!user) {
     throw new ApiError(404, "User not found Please login again");
   }
@@ -305,7 +304,10 @@ const uploadPost = asyncHandler(async (req, res) => {
   if (!postImagePath) {
     console.error("Post image not found in request: ", req.files);
   }
-  const postImage = await uploadOnCloudinary(postImagePath);
+  let postImage;
+  if (postImagePath) {
+    postImage = await uploadOnCloudinary(postImagePath);
+  }
   console.log(postImage);
   if (!postImage) {
     console.error("Error while uploading post image to Cloudinary");
@@ -347,11 +349,10 @@ const likePost = asyncHandler(async (req, res) => {
       await Like.findByIdAndDelete(existingLike._id);
       post.likesCount = Math.max(0, post.likesCount - 1);
       console.log("Post unliked by user: ", user.email);
-    }
-      else {
-      await Like.create({ 
-        user: user._id, 
-        post: postId 
+    } else {
+      await Like.create({
+        user: user._id,
+        post: postId,
       });
       post.likesCount += 1;
       console.log("Post liked by user: ", user.email);
@@ -359,7 +360,7 @@ const likePost = asyncHandler(async (req, res) => {
     await post.save();
     return res
       .status(200)
-      .json(new ApiResponse(200,  post , "Post liked/unliked successfully"));
+      .json(new ApiResponse(200, post, "Post liked/unliked successfully"));
   } catch (error) {
     console.error("Error while liking/unliking post: ", error);
     throw new ApiError(500, "Error while liking/unliking post");
@@ -376,9 +377,9 @@ const commentOnPost = asyncHandler(async (req, res) => {
     throw new ApiError(400, "Post ID and comment content are required");
   }
   const post = await Post.findById(postId);
-    if (!post) {
-      throw new ApiError(404, "Post not found");
-    }
+  if (!post) {
+    throw new ApiError(404, "Post not found");
+  }
   console.log("Post found for commenting: ", post);
   try {
     const comment = await Comment.create({
@@ -394,7 +395,9 @@ const commentOnPost = asyncHandler(async (req, res) => {
     console.log("Comment added to post: ", comment);
     return res
       .status(200)
-      .json(new ApiResponse(200, { comment, post }, "Comment added successfully"));
+      .json(
+        new ApiResponse(200, { comment, post }, "Comment added successfully")
+      );
   } catch (error) {
     console.error("Error while adding comment: ", error);
     throw new ApiError(500, "Error while adding comment");
@@ -411,5 +414,5 @@ export {
   updateUser,
   uploadPost,
   likePost,
-  commentOnPost
+  commentOnPost,
 };

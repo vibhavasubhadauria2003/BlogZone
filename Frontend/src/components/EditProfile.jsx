@@ -1,10 +1,11 @@
-import React, { useState } from "react";
+import React, { use, useState } from "react";
 import profileImage from "../assets/userImage.avif";
 import { FiCamera, FiSave } from "react-icons/fi";
 import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import Navbar from "./Navbar";
+import { toast } from "react-hot-toast";
 
 export default function EditProfile() {
   const userData = useSelector((state) => state.user.userData);
@@ -18,7 +19,9 @@ export default function EditProfile() {
     file: null,
   });
 
-  const [preview, setPreview] = useState(null);
+  const [preview, setPreview] = useState(
+    userData?.profileImage || profileImage,
+  );
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -42,12 +45,12 @@ export default function EditProfile() {
     data.append("gender", form.gender || userData.gender);
     if (preview) {
       console.log("preview", preview);
-      data.append("image", form.file);
+      data.append("profileImage", form.file);
     }
 
     try {
-      const response = await axios.put(
-        `https://socialnova-backend.onrender.com/users/edit`,
+      const response = await axios.patch(
+        `http://localhost:9000/users/update`,
         data,
         { withCredentials: true },
       );

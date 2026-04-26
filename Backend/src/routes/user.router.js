@@ -12,18 +12,16 @@ import {
   logoutUser,
   uploadPost,
   likePost,
-  commentOnPost
+  commentOnPost,
 } from "../controllers/user.controller.js";
 
 const userRouter = Router();
 
 userRouter.route("/send-verification-code").post(sendVerificationCode);
 userRouter.route("/verify").post(verifyUser);
-userRouter.route("/").post(registerUser);
 
 userRouter.route("/login").post(loginUser);
 
-userRouter.route("/").get(authUser, getUserProfile);
 userRouter.route("/update").patch(
   upload.fields([
     {
@@ -47,5 +45,7 @@ userRouter.route("/upload-post").post(
 );
 userRouter.route("/like").post(authUser, likePost);
 userRouter.route("/comment").post(authUser, commentOnPost);
+userRouter.route("/").post(registerUser);
+userRouter.route("/").get(authUser, getUserProfile);
 
 export { userRouter };

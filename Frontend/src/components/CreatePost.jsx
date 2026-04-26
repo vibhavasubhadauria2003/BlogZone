@@ -30,14 +30,14 @@ function CreatePost() {
     }
 
     const formData = new FormData();
-    formData.append("post_content", postContent);
-    if (image) formData.append("image", image);
+    formData.append("content", postContent);
+    if (image) formData.append("postImage", image);
 
     try {
       setLoading(true);
 
       const response = await axios.post(
-        "http://localhost:9000/post/create-post",
+        "http://localhost:9000/users/upload-post",
         formData,
         {
           withCredentials: true,
