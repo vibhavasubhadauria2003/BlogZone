@@ -11,7 +11,8 @@ import {
   getUserProfile,
   logoutUser,
   uploadPost,
-  likePost
+  likePost,
+  commentOnPost
 } from "../controllers/user.controller.js";
 
 const userRouter = Router();
@@ -45,5 +46,6 @@ userRouter.route("/upload-post").post(
   uploadPost
 );
 userRouter.route("/like").post(authUser, likePost);
+userRouter.route("/comment").post(authUser, commentOnPost);
 
 export { userRouter };

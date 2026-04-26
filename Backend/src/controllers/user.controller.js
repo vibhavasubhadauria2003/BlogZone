@@ -365,6 +365,41 @@ const likePost = asyncHandler(async (req, res) => {
     throw new ApiError(500, "Error while liking/unliking post");
   }
 });
+const commentOnPost = asyncHandler(async (req, res) => {
+  const user = await User.findOne({ email: req.email });
+  if (!user) {
+    throw new ApiError(404, "User not found Please login again");
+  }
+  console.log("User commenting on post: ", user);
+  const { postId, comment_text } = req.body;
+  if (!postId || !comment_text) {
+    throw new ApiError(400, "Post ID and comment content are required");
+  }
+  const post = await Post.findById(postId);
+    if (!post) {
+      throw new ApiError(404, "Post not found");
+    }
+  console.log("Post found for commenting: ", post);
+  try {
+    const comment = await Comment.create({
+      comment_text: comment_text,
+      user: user._id,
+      post: post._id,
+    });
+    if (!comment) {
+      throw new ApiError(500, "Error while adding comment to DB");
+    }
+    post.commentsCount += 1;
+    await post.save();
+    console.log("Comment added to post: ", comment);
+    return res
+      .status(200)
+      .json(new ApiResponse(200, { comment, post }, "Comment added successfully"));
+  } catch (error) {
+    console.error("Error while adding comment: ", error);
+    throw new ApiError(500, "Error while adding comment");
+  }
+});
 
 export {
   registerUser,
@@ -375,5 +410,6 @@ export {
   getUserProfile,
   updateUser,
   uploadPost,
-  likePost
+  likePost,
+  commentOnPost
 };
