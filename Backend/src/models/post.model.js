@@ -11,14 +11,6 @@ const postSchema = new Schema(
       type: String, //cloudinary url
       trim: true,
     },
-    likesCount: {
-      type: Number,
-      default: 0,
-    },
-    commentsCount: {
-      type: Number,
-      default: 0,
-    },
     author: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",

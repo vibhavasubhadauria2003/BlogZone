@@ -408,7 +408,7 @@ const getallPosts = asyncHandler(async (req, res) => {
   if (!user) {
     throw new ApiError(404, "User not found Please login again");
   }
-  try { 
+  try {
     const posts = await Post.aggregate([
       {
         $lookup: {
@@ -417,16 +417,67 @@ const getallPosts = asyncHandler(async (req, res) => {
           foreignField: "_id",
           as: "authorDetails",
         },
-      },  
+      },
+      {
+        $lookup: {
+          from: "likes",
+          localField: "_id",
+          foreignField: "post",
+          as: "likeDetails",
+        },
+      },
+      {
+        $lookup: {
+          from: "users",
+          localField: "likeDetails.user",
+          foreignField: "_id",
+          as: "likedByUsers",
+        },
+      },
+      {
+        $lookup: {
+          from: "comments",
+          localField: "_id",
+          foreignField: "post",
+          as: "commentDetails",
+          pipeline: [
+            {
+              $lookup: {
+                from: "users",
+                localField: "user",
+                foreignField: "_id",
+                as: "commenterDetails",
+              },
+            },
+          ],
+        },
+      },
       {
         $project: {
           content: 1,
           image: 1,
-          likesCount: 1,
-          commentsCount: 1,
           authorDetails: 1,
+          likedByUsers: {
+            _id: 1,
+            email: 1,
+            userName: 1,
+            fullName: 1,
+            profileImage: 1,
+          },
+          commentDetails: {
+            comment_text: 1,
+            commenterDetails: {
+              _id: 1,
+              email: 1,
+              userName: 1,
+              fullName: 1,
+              profileImage: 1,
+            },
+          },
+          likesCount: { $size: "$likeDetails" },
+          commentsCount: { $size: "$commentDetails" },
         },
-      }
+      },
     ]);
     if (!posts) {
       throw new ApiError(500, "Error while fetching posts from DB");
@@ -453,13 +504,65 @@ const getMyPosts = asyncHandler(async (req, res) => {
         },
       },
       {
+        $lookup: {
+          from: "likes",
+          localField: "_id",
+          foreignField: "post",
+          as: "likeDetails",
+        },
+      },
+      {
+        $lookup: {
+          from: "users",
+          localField: "likeDetails.user",
+          foreignField: "_id",
+          as: "likedByUsers",
+        },
+      },
+      {
+        $lookup: {
+          from: "comments",
+          localField: "_id",
+          foreignField: "post",
+          as: "commentDetails",
+          pipeline: [
+            {
+              $lookup: {
+                from: "users",
+                localField: "user",
+                foreignField: "_id",
+                as: "commenterDetails",
+              },
+            },
+          ],
+        },
+      },
+      {
         $project: {
           content: 1,
           image: 1,
-          likesCount: 1,
-          commentsCount: 1,
+          
+          likedByUsers: {
+            _id: 1,
+            email: 1,
+            userName: 1,
+            fullName: 1,
+            profileImage: 1,
+          },
+          commentDetails: {
+            comment_text: 1,
+            commenterDetails: {
+              _id: 1,
+              email: 1,
+              userName: 1,
+              fullName: 1,
+              profileImage: 1,
+            },
+          },
+          likesCount: { $size: "$likeDetails" },
+          commentsCount: { $size: "$commentDetails" },
         },
-      }
+      },
     ]);
     if (!posts) {
       throw new ApiError(500, "Error while fetching posts from DB");
