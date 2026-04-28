@@ -5,10 +5,8 @@ import { MdDelete } from "react-icons/md";
 import { toast } from "react-hot-toast";
 import React from "react";
 import { FiMessageCircle } from "react-icons/fi";
-import { useSelector } from "react-redux";
 
-function Post({ post }) {
-  const userData = useSelector((state) => state.user.userData);
+function MyPost({ post, userData }) {
   const [likeCount, setLikeCount] = React.useState(post.like_count || 0);
   const [isLiked, setIsLiked] = React.useState(
     post?.likedByUsers?.includes(userData?.[0]?.id),
@@ -65,17 +63,15 @@ function Post({ post }) {
       <div className="flex justify-between items-center">
         <div className="flex items-center justify-center gap-3">
           <img
-            src={post.authorDetails[0].profileImage}
-            alt={post.authorDetails[0].fullName}
+            src={userData[0].profileImage}
+            alt={userData[0].fullName}
             className="w-12 h-12 rounded-full object-cover"
           />
           <div>
             <h1 className="text-lg font-semibold text-white">
-              {post.authorDetails[0].fullName}
+              {userData[0].fullName}
             </h1>
-            <p className="text-sm text-blue-400">
-              @{post.authorDetails[0].userName}
-            </p>
+            <p className="text-sm text-blue-400">@{userData[0].userName}</p>
           </div>
         </div>
       </div>
@@ -124,13 +120,11 @@ function Post({ post }) {
             onClick={likeHandler}
           />
 
-          <span className="text-gray-200 text-xl font-medium">
-            {post.commentsCount}
-          </span>
+          <span className="text-gray-200 text-xl font-medium">{likeCount}</span>
         </div> */}
       </div>
     </div>
   );
 }
 
-export default Post;
+export default MyPost;

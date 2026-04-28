@@ -20,7 +20,7 @@ export default function EditProfile() {
   });
 
   const [preview, setPreview] = useState(
-    userData?.profileImage || profileImage,
+    userData?.[0]?.profileImage || profileImage,
   );
 
   const handleChange = (e) => {
@@ -39,10 +39,10 @@ export default function EditProfile() {
     e.preventDefault();
     setLoading(true);
     const data = new FormData();
-    data.append("userName", form.userName || userData.userName);
-    data.append("fullName", form.fullName || userData.fullName);
-    data.append("dob", form.dob || userData.dob);
-    data.append("gender", form.gender || userData.gender);
+    data.append("userName", form.userName || userData[0].userName);
+    data.append("fullName", form.fullName || userData[0].fullName);
+    data.append("dob", form.dob || userData[0].dob);
+    data.append("gender", form.gender || userData[0].gender);
     if (preview) {
       console.log("preview", preview);
       data.append("profileImage", form.file);
@@ -79,7 +79,7 @@ export default function EditProfile() {
             <div className="relative group">
               <div className="w-28 h-28 rounded-full p-[3px] bg-gradient-to-r from-[#6C5CE7] to-[#00D4FF]">
                 <img
-                  src={preview || userData?.profilePicture || profileImage}
+                  src={preview || userData?.[0]?.profileImage || profileImage}
                   alt="profile"
                   className="w-full h-full rounded-full object-cover bg-slate-900"
                 />
@@ -113,7 +113,9 @@ export default function EditProfile() {
               <input
                 type="text"
                 name="username"
-                value={form?.username ? form?.username : userData?.userName}
+                value={
+                  form?.username ? form?.username : userData?.[0]?.userName
+                }
                 onChange={handleChange}
                 className="w-full px-4 py-2 rounded-xl bg-[#020617] border border-slate-700 focus:border-[#00D4FF] focus:ring-2 focus:ring-[#00D4FF]/30 outline-none"
               />
@@ -127,7 +129,7 @@ export default function EditProfile() {
               <input
                 type="text"
                 name="fullName"
-                value={form.fullName ? form.fullName : userData.fullName}
+                value={form.fullName ? form.fullName : userData?.[0]?.fullName}
                 onChange={handleChange}
                 className="w-full px-4 py-2 rounded-xl bg-[#020617] border border-slate-700 focus:border-[#00D4FF] focus:ring-2 focus:ring-[#00D4FF]/30 outline-none"
               />
@@ -141,7 +143,7 @@ export default function EditProfile() {
               <input
                 type="date"
                 name="dateOfBirth"
-                value={form.dob ? form.dob : userData.dob.split("T")[0]}
+                value={form.dob ? form.dob : userData?.[0]?.dob?.split("T")[0]}
                 onChange={handleChange}
                 placeholder="e.g. Software Engineer"
                 className="w-full px-4 py-2 rounded-xl bg-[#020617] border  border-slate-700 focus:border-[#00D4FF] focus:ring-2 focus:ring-[#00D4FF]/30 outline-none"
@@ -155,7 +157,7 @@ export default function EditProfile() {
               </label>
               <select
                 name="gender"
-                value={form.gender ? form.gender : userData.gender}
+                value={form.gender ? form.gender : userData?.[0]?.gender}
                 onChange={handleChange}
                 className="w-full px-4 py-2 rounded-xl bg-[#020617] border border-slate-700 focus:border-[#00D4FF] focus:ring-2 focus:ring-[#00D4FF]/30 outline-none"
               >

@@ -20,29 +20,30 @@ function Profile() {
     navigate("/login");
   }
 
-  // useEffect(() => {
-  //   const fetchProfile = async () => {
-  //     try {
-  //       const response = await axios.get("http://localhost:9000/users", {
-  //         withCredentials: true,
-  //       });
-  //       console.log("Profile Data: ", response.data.message);
-  //       dispatch(setUserData(response.data.message.user));
-  //     } catch (err) {
-  //       console.error("Error fetching profile:", err);
-  //     }
-  //   };
-  //   fetchProfile();
-  // }, [userData]);
+  React.useEffect(() => {
+    const getCurrentUser = async () => {
+      try {
+        const response = await axios.get("http://localhost:9000/users", {
+          withCredentials: true,
+        });
+
+        console.log("Current User Response: ", response.data.data);
+        dispatch(setUserData(response.data.data));
+      } catch (err) {
+        console.error("Error fetching liked posts:", err);
+      }
+    };
+    getCurrentUser();
+  }, []);
   console.log("User Data: ", userData);
   return (
     <div className="h-screen flex flex-col items-center w-screen  gap-3">
       <Navbar />
-      <div className="relative w-[60%] mt-[50px] flex gap-10 p-[30px] border border-gray-800 rounded-2xl items-center hover:shadow-2xl hover:shadow-gray-900 transition-all ease-in-out duration-700">
+      <div className="relative w-[60%] mt-[150px] flex gap-10 p-[30px] border border-gray-800 rounded-2xl items-center hover:shadow-2xl hover:shadow-gray-900 transition-all ease-in-out duration-700">
         <div className="relative">
           <img
             src={
-              userData?.profileImage ||
+              userData[0]?.profileImage ||
               "https://static.vecteezy.com/system/resources/thumbnails/033/129/417/small/a-business-man-stands-against-white-background-with-his-arms-crossed-ai-generative-photo.jpg"
             }
             alt=""
@@ -58,13 +59,13 @@ function Profile() {
 
         <div className="flex flex-col items-start mt-10 mb-10">
           <h1 className="text-4xl text-gray-200 font-bold mb-5">
-            {userData.fullName || "Yaman Gahlout"}
+            {userData[0]?.fullName || "Yaman Gahlout"}
           </h1>
           <p className="text-2xl text-blue-600">
-            @{userData?.userName || "yaman_gahlout"}
+            @{userData[0]?.userName || "yaman_gahlout"}
           </p>
           <p className="text-gray-200">
-            {userData.email || "yaman.gahlout@example.com"}
+            {userData[0]?.email || "yaman.gahlout@example.com"}
           </p>
         </div>
 
