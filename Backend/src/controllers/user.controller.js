@@ -161,9 +161,7 @@ const registerUser = asyncHandler(async (req, res) => {
       throw new ApiError(500, "Error while registering on DB");
     }
     await Code.findByIdAndDelete(code._id);
-    const createdUser = await User.findById(user._id).select(
-      "-password"
-    );
+    const createdUser = await User.findById(user._id).select("-password");
     console.log("User created in DB: ", createdUser);
     if (!createdUser) {
       throw new ApiError(500, "Error while registering on DB");
@@ -258,7 +256,7 @@ const getUserProfile = asyncHandler(async (req, res) => {
                 localField: "likeDetails.user",
                 foreignField: "_id",
                 as: "likedByUsers",
-                pipeline: [ 
+                pipeline: [
                   {
                     $project: {
                       _id: 1,
@@ -336,7 +334,7 @@ const getUserProfile = asyncHandler(async (req, res) => {
               $sort: {
                 createdAt: -1,
               },
-            }
+            },
           ],
         },
       },
@@ -461,14 +459,14 @@ const deletePost = asyncHandler(async (req, res) => {
   if (!postId) {
     throw new ApiError(400, "Post ID is required");
   }
+  const post = await Post.findById(postId);
+  if (!post) {
+    throw new ApiError(404, "Post not found");
+  }
+  if (post.author.toString() !== user._id.toString() && user.role !== "admin") {
+    throw new ApiError(403, "You are not authorized to delete this post");
+  }
   try {
-    const post = await Post.findById(postId);
-    if (!post) {
-      throw new ApiError(404, "Post not found");
-    }
-    if (post.author.toString() !== user._id.toString()&&user.role!=="admin") {
-      throw new ApiError(403, "You are not authorized to delete this post");
-    }
     await Post.findByIdAndDelete(postId);
     return res
       .status(200)
@@ -597,12 +595,11 @@ const getallPosts = asyncHandler(async (req, res) => {
                 foreignField: "_id",
                 as: "commenterDetails",
               },
-
             },
             {
               $unwind: {
                 path: "$commenterDetails",
-                preserveNullAndEmptyArrays: true
+                preserveNullAndEmptyArrays: true,
               },
             },
             {
@@ -614,7 +611,7 @@ const getallPosts = asyncHandler(async (req, res) => {
                 commenterFullName: "$commenterDetails.fullName",
                 commenterProfileImage: "$commenterDetails.profileImage",
               },
-            }
+            },
           ],
         },
       },
@@ -739,11 +736,11 @@ const verifyAdmin = asyncHandler(async (req, res) => {
   if (!user) {
     throw new ApiError(404, "User not found Please login again");
   }
-  const { password } = req.body;
-  if (password !== process.env.ADMIN_PASSWORD) {
+  const { adminPassword } = req.body;
+  if (adminPassword !== process.env.ADMIN_PASSWORD) {
     throw new ApiError(401, "Invalid admin password");
   }
-  try {   
+  try {
     const updatedUser = await User.findByIdAndUpdate(
       user._id,
       {
@@ -756,8 +753,14 @@ const verifyAdmin = asyncHandler(async (req, res) => {
     }
     console.log("User role updated to admin successfully: ", updatedUser);
     return res
-    .status(200)
-    .json(new ApiResponse(200, { isVerified: true }, "Admin verified successfully"));
+      .status(200)
+      .json(
+        new ApiResponse(
+          200,
+          { isVerified: true },
+          "Admin verified successfully"
+        )
+      );
   } catch (error) {
     console.error("Error while updating user role: ", error);
     throw new ApiError(500, "Error while updating user role");
