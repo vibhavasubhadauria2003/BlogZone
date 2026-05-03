@@ -466,7 +466,7 @@ const deletePost = asyncHandler(async (req, res) => {
     if (!post) {
       throw new ApiError(404, "Post not found");
     }
-    if (post.author.toString() !== user._id.toString()) {
+    if (post.author.toString() !== user._id.toString()&&user.role!=="admin") {
       throw new ApiError(403, "You are not authorized to delete this post");
     }
     await Post.findByIdAndDelete(postId);
@@ -734,6 +734,35 @@ const getMyPosts = asyncHandler(async (req, res) => {
     throw new ApiError(500, "Error while fetching my posts");
   }
 });
+const verifyAdmin = asyncHandler(async (req, res) => {
+  const user = await User.findOne({ email: req.email });
+  if (!user) {
+    throw new ApiError(404, "User not found Please login again");
+  }
+  const { password } = req.body;
+  if (password !== process.env.ADMIN_PASSWORD) {
+    throw new ApiError(401, "Invalid admin password");
+  }
+  try {   
+    const updatedUser = await User.findByIdAndUpdate(
+      user._id,
+      {
+        role: "admin",
+      },
+      { new: true }
+    ).select("-password");
+    if (!updatedUser) {
+      throw new ApiError(500, "Error while updating user role on DB");
+    }
+    console.log("User role updated to admin successfully: ", updatedUser);
+    return res
+    .status(200)
+    .json(new ApiResponse(200, { isVerified: true }, "Admin verified successfully"));
+  } catch (error) {
+    console.error("Error while updating user role: ", error);
+    throw new ApiError(500, "Error while updating user role");
+  }
+});
 export {
   registerUser,
   sendVerificationCode,
@@ -744,6 +773,7 @@ export {
   updateUser,
   uploadPost,
   deletePost,
+  verifyAdmin,
   likePost,
   commentOnPost,
   getallPosts,
