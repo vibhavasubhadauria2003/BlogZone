@@ -47,7 +47,7 @@ userRouter.route("/upload-post").post(
   authUser,
   uploadPost
 );
-userRouter.route("/delete-post").delete(authUser, deletePost);
+userRouter.route("/delete-post/:postId").delete(authUser, deletePost);
 userRouter.route("/like").post(authUser, likePost);
 userRouter.route("/comment").post(authUser, commentOnPost);
 userRouter.route("/posts").get(authUser, getallPosts);
