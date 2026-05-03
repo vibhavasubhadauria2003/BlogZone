@@ -456,7 +456,7 @@ const deletePost = asyncHandler(async (req, res) => {
   if (!user) {
     throw new ApiError(404, "User not found Please login again");
   }
-  const { postId } = req.body;
+  const { postId } = req.params;
   if (!postId) {
     throw new ApiError(400, "Post ID is required");
   }
@@ -621,8 +621,12 @@ const getallPosts = asyncHandler(async (req, res) => {
           content: 1,
           image: 1,
           authorDetails: 1,
-          likedByUsers: {
-            _id: 1,
+          likedUsers: {
+            $map: {
+              input: "$likedByUsers",
+              as: "likedByUser",
+              in: "$$likedByUser._id",
+            },
           },
           commentDetails: 1,
           likesCount: { $size: "$likeDetails" },
