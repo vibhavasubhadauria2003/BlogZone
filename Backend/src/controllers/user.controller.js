@@ -346,6 +346,7 @@ const getUserProfile = asyncHandler(async (req, res) => {
           dob: 1,
           gender: 1,
           profileImage: 1,
+          role: 1,
           posts: 1,
           postsCount: { $size: "$posts" },
         },
