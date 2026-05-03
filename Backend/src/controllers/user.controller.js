@@ -162,7 +162,7 @@ const registerUser = asyncHandler(async (req, res) => {
     }
     await Code.findByIdAndDelete(code._id);
     const createdUser = await User.findById(user._id).select(
-      "-password -refreshToken"
+      "-password"
     );
     console.log("User created in DB: ", createdUser);
     if (!createdUser) {
@@ -316,6 +316,27 @@ const getUserProfile = asyncHandler(async (req, res) => {
                 ],
               },
             },
+            {
+              $project: {
+                content: 1,
+                image: 1,
+                likedByUsers: {
+                  _id: 1,
+                  email: 1,
+                  userName: 1,
+                  fullName: 1,
+                  profileImage: 1,
+                },
+                commentDetails: 1,
+                likesCount: { $size: "$likeDetails" },
+                commentsCount: { $size: "$commentDetails" },
+              },
+            },
+            {
+              $sort: {
+                createdAt: -1,
+              },
+            }
           ],
         },
       },
@@ -327,22 +348,7 @@ const getUserProfile = asyncHandler(async (req, res) => {
           dob: 1,
           gender: 1,
           profileImage: 1,
-          posts: {
-            $map: {
-              input: "$posts",
-              as: "post",
-              in: {
-                _id: "$$post._id",
-                content: "$$post.content",
-                image: "$$post.image",
-                likedByUsers: "$$post.likedByUsers",
-                commentDetails: "$$post.commentDetails",
-                likesCount: { $size: "$$post.likeDetails" },
-                commentsCount: { $size: "$$post.commentDetails" },
-              },
-            },
-
-          },
+          posts: 1,
           postsCount: { $size: "$posts" },
         },
       },
@@ -445,6 +451,34 @@ const uploadPost = asyncHandler(async (req, res) => {
     throw new ApiError(500, "Error while uploading post");
   }
 });
+
+const deletePost = asyncHandler(async (req, res) => {
+  const user = await User.findOne({ email: req.email });
+  if (!user) {
+    throw new ApiError(404, "User not found Please login again");
+  }
+  const { postId } = req.body;
+  if (!postId) {
+    throw new ApiError(400, "Post ID is required");
+  }
+  try {
+    const post = await Post.findById(postId);
+    if (!post) {
+      throw new ApiError(404, "Post not found");
+    }
+    if (post.author.toString() !== user._id.toString()) {
+      throw new ApiError(403, "You are not authorized to delete this post");
+    }
+    await Post.findByIdAndDelete(postId);
+    return res
+      .status(200)
+      .json(new ApiResponse(200, null, "Post deleted successfully"));
+  } catch (error) {
+    console.error("Error while deleting post: ", error);
+    throw new ApiError(500, "Error while deleting post");
+  }
+});
+
 const likePost = asyncHandler(async (req, res) => {
   const user = await User.findOne({ email: req.email });
   if (!user) {
@@ -591,14 +625,15 @@ const getallPosts = asyncHandler(async (req, res) => {
           authorDetails: 1,
           likedByUsers: {
             _id: 1,
-            email: 1,
-            userName: 1,
-            fullName: 1,
-            profileImage: 1,
           },
           commentDetails: 1,
           likesCount: { $size: "$likeDetails" },
           commentsCount: { $size: "$commentDetails" },
+        },
+      },
+      {
+        $sort: {
+          createdAt: -1,
         },
       },
     ]);
@@ -708,6 +743,7 @@ export {
   getUserProfile,
   updateUser,
   uploadPost,
+  deletePost,
   likePost,
   commentOnPost,
   getallPosts,

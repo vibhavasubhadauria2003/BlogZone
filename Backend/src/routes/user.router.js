@@ -15,6 +15,7 @@ import {
   commentOnPost,
   getallPosts,
   getMyPosts,
+  deletePost,
 } from "../controllers/user.controller.js";
 
 const userRouter = Router();
@@ -45,6 +46,7 @@ userRouter.route("/upload-post").post(
   authUser,
   uploadPost
 );
+userRouter.route("/delete-post").delete(authUser, deletePost);
 userRouter.route("/like").post(authUser, likePost);
 userRouter.route("/comment").post(authUser, commentOnPost);
 userRouter.route("/posts").get(authUser, getallPosts);
