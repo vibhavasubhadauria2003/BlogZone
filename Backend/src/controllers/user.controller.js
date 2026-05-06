@@ -771,6 +771,97 @@ const verifyAdmin = asyncHandler(async (req, res) => {
     throw new ApiError(500, "Error while updating user role");
   }
 });
+const getallUsers = asyncHandler(async (req, res) => {
+  const user = await User.findOne({ email: req.email });
+  if (!user) {
+    throw new ApiError(404, "User not found Please login again");
+  }
+  if (user.role !== "admin") {
+    throw new ApiError(403, "You are not authorized to access this resource");
+  }
+  try{
+    const users = await User.aggregate([
+      {
+        $match: {
+          role: "user",
+        },
+      },
+      {
+        $project: {
+          email: 1,
+          userName: 1,
+          fullName: 1,
+          dob: 1,
+          gender: 1,
+          profileImage: 1,
+        }
+      }
+    ]);
+    if (!users) {
+      throw new ApiError(500, "Error while fetching users from DB");
+    }
+    console.log("All users retrieved successfully: ", users);
+    return res
+      .status(200)
+      .json(new ApiResponse(200, users, "All users retrieved successfully"));
+  } catch (error) {
+    console.error("Error while fetching all users: ", error);
+    throw new ApiError(500, "Error while fetching all users");
+  }
+});
+const deleteUserCompletely = asyncHandler(async (req, res) => {
+  const user = await User.findOne({ email: req.email });
+  if (!user) {
+    throw new ApiError(404, "User not found Please login again");
+  }
+  const { userId } = req.params;
+  if (!userId) {
+    throw new ApiError(400, "User ID is required");
+  }
+  if (user._id.toString() !== userId && user.role !== "admin") {
+    throw new ApiError(403, "You are not authorized to delete this user");
+  }
+  try {
+    const userToDelete = await User.findById(userId);
+    if (!userToDelete) {
+      throw new ApiError(404, "User to delete not found");
+    }
+    const allPosts = await Post.find({ author: userId });
+    for (const post of allPosts) {
+      const deletePostLikes = await Like.deleteMany({ post: post._id });
+      if (!deletePostLikes) {
+        throw new ApiError(500, "Error while deleting post likes from DB");
+      }
+      const deletePostComments = await Comment.deleteMany({ post: post._id });
+      if (!deletePostComments) {
+        throw new ApiError(500, "Error while deleting post comments from DB");
+      }
+      const deletePost = await Post.findByIdAndDelete(post._id);
+      if (!deletePost) {
+        throw new ApiError(500, "Error while deleting user's post from DB");
+      }
+    }
+    const deleteLikes = await Like.deleteMany({ user: userId });
+    if (!deleteLikes) {
+      throw new ApiError(500, "Error while deleting user's likes from DB");
+    }
+    const deleteComments = await Comment.deleteMany({ user: userId });
+    if (!deleteComments) {
+      throw new ApiError(500, "Error while deleting user's comments from DB");
+    }
+    const deletedUser = await User.findByIdAndDelete(userId);
+    if (!deletedUser) {
+      throw new ApiError(500, "Error while deleting user from DB");
+    }
+    console.log("User deleted successfully: ", deletedUser);
+    return res
+      .status(200)
+      .json(new ApiResponse(200, null, "User deleted successfully"));
+  } catch (error) {
+    console.error("Error while deleting user: ", error);
+    throw new ApiError(500, "Error while deleting user");
+  }
+});
 export {
   registerUser,
   sendVerificationCode,
@@ -786,4 +877,6 @@ export {
   commentOnPost,
   getallPosts,
   getMyPosts,
+  getallUsers,
+  deleteUserCompletely,
 };

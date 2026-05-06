@@ -17,6 +17,8 @@ import {
   getMyPosts,
   deletePost,
   verifyAdmin,
+  getallUsers,
+  deleteUserCompletely,
 } from "../controllers/user.controller.js";
 
 const userRouter = Router();
@@ -53,6 +55,8 @@ userRouter.route("/comment").post(authUser, commentOnPost);
 userRouter.route("/posts").get(authUser, getallPosts);
 userRouter.route("/my-posts").get(authUser, getMyPosts);
 userRouter.route("/verify-admin").patch(authUser, verifyAdmin);
+userRouter.route("/all-users").get(authUser, getallUsers);
+userRouter.route("/delete/:userId").delete(authUser, deleteUserCompletely);
 userRouter.route("/").post(registerUser);
 userRouter.route("/").get(authUser, getUserProfile);
 
