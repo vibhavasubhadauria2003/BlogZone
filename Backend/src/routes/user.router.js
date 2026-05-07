@@ -4,8 +4,6 @@ import { upload } from "../middlewares/multer.middleware.js";
 import authUser from "../middlewares/authenticate.middleware.js";
 import {
   registerUser,
-  sendVerificationCode,
-  verifyUser,
   loginUser,
   updateUser,
   getUserProfile,
@@ -20,6 +18,10 @@ import {
   getallUsers,
   deleteUserCompletely,
 } from "../controllers/user.controller.js";
+import {
+  sendVerificationCode,
+  verifyUser,
+} from "../controllers/auth.user.js";
 
 const userRouter = Router();
 
