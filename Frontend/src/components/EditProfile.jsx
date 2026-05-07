@@ -50,7 +50,7 @@ export default function EditProfile() {
 
     try {
       const response = await axios.patch(
-        `http://localhost:9000/users/update`,
+        `http://localhost:8080/users/update`,
         data,
         { withCredentials: true },
       );

@@ -47,11 +47,12 @@ function Home() {
   const [likedPosts, setLikedPosts] = useState([]);
   const posts = useSelector((state) => state.post.posts);
   const dispatch = useDispatch();
+  const userData = useSelector((state) => state.user.userData);
 
   React.useEffect(() => {
     const getCurrentUser = async () => {
       try {
-        const response = await axios.get("http://localhost:9000/users", {
+        const response = await axios.get("http://localhost:8080/users", {
           withCredentials: true,
         });
 
@@ -67,7 +68,7 @@ function Home() {
   React.useEffect(() => {
     const getAllPosts = async () => {
       try {
-        const response = await axios.get("http://localhost:9000/users/posts", {
+        const response = await axios.get("http://localhost:8080/users/posts", {
           withCredentials: true,
         });
 
@@ -86,7 +87,7 @@ function Home() {
       <div className=" relative w-[85%] h-full mt-15 flex justify-center items-center p-[30px]">
         <button
           onClick={() => navigate("/create-post")}
-          className="fixed bottom-25 z-50 right-20 flex items-center gap-2 text-gray-800 bg-gray-200 text-xl p-[20px_40px] rounded-3xl cursor-pointer hover:scale-105 transition-all ease-in-out duration-200"
+          className="fixed bottom-25 z-50 right-20 flex items-center gap-2 text-gray-200 bg-blue-600 text-xl p-[20px_40px] rounded-3xl cursor-pointer hover:scale-105 transition-all ease-in-out duration-200"
         >
           <IoMdCreate />
           Create Post

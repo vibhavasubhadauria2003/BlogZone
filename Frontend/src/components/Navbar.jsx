@@ -6,15 +6,18 @@ function Navbar() {
   const location = useLocation();
   const isActive = (path) => location.pathname === path;
   const userData = useSelector((state) => state.user.userData);
-  console.log("userData in navbar: ", userData);
+
   const navigate = useNavigate();
+  const role = userData?.[0]?.role || "admin";
   return (
     <div className="w-full bg-[#030712] fixed z-50 top-0 flex justify-center p-5 border-b border-gray-600">
       <div className="w-[85%] flex justify-between items-center">
         <h1 className="text-3xl font-medium cursor-pointer text-blue-500 font-serif">
           OpenPost.
         </h1>{" "}
-        <div className="flex justify-between items-center text-gray-200 w-[20%] uppercase">
+        <div
+          className={`flex justify-between items-center text-gray-200 ${role === "admin" ? "w-[30%]" : "w-[20%]"} uppercase`}
+        >
           <h1
             onClick={() => navigate("/home")}
             className={
@@ -25,6 +28,18 @@ function Navbar() {
           >
             Home
           </h1>
+          {role === "admin" && (
+            <h1
+              onClick={() => navigate("/admin")}
+              className={
+                isActive("/admin")
+                  ? "text-blue-600 cursor-pointer font-medium"
+                  : "cursor-pointer"
+              }
+            >
+              Admin
+            </h1>
+          )}
           <h1
             onClick={() => navigate("/your-posts")}
             className={

@@ -1,79 +1,121 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
+import {
+  loadCaptchaEnginge,
+  LoadCanvasTemplate,
+  validateCaptcha,
+} from "react-simple-captcha";
 
 function Login() {
-  const [email, setEmail] = React.useState("");
-  const [password, setPassword] = React.useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [captchaInput, setCaptchaInput] = useState("");
   const navigate = useNavigate();
+
+  useEffect(() => {
+    loadCaptchaEnginge(6);
+  }, []);
+
+  const reloadCaptcha = () => {
+    loadCaptchaEnginge(6);
+  };
+
   async function submitHandler(e) {
     e.preventDefault();
-    const data = {
-      email,
-      password,
-    };
-    console.log(data);
+
+    if (!validateCaptcha(captchaInput)) {
+      toast.error("Invalid Captcha");
+      reloadCaptcha();
+      return;
+    }
 
     try {
       const response = await axios.post(
-        "http://localhost:9000/users/login",
-        data,
+        "http://localhost:8080/users/login",
+        { email, password },
         { withCredentials: true },
       );
+
       toast.success("Logged in successfully");
-      console.log(response);
-      console.log(response.data.message.token);
       localStorage.setItem("userToken", response.data.message.token);
       navigate("/home");
     } catch (err) {
-      console.error("Login error:", err);
-      toast.error("Login failed. Please check your credentials.");
+      toast.error(
+        err.response?.data?.message ||
+          "Login failed. Please check your credentials.",
+      );
     }
   }
+
   return (
-    <div className="h-screen w-screen flex flex-col gap-[50px] items-center bg-gray-950">
-      <div className="w-[85%] flex  mt-4 justify-between items-center">
-        <h1 className="text-3xl text-gray-300 cursor-pointer">openPost.</h1>{" "}
-        <div className="flex justify-between text-gray-200 gap-7 uppercase">
-          <button
-            onClick={() => navigate("/signup")}
-            className="p-[10px_20px] border cursor-pointer border-gray-200 text-gray-200 rounded-lg hover:text-black hover:bg-gray-200 transition-all ease-in-out duration-700"
-          >
-            Signup
-          </button>
-        </div>
-      </div>
-      <div className="flex flex-col gap-5 h-[400px] w-[550px] mt-[50px] shadow-2xl shadow-gray-900 border border-gray-200 rounded-2xl p-5 items-center">
-        <h1 className="text-5xl  text-gray-200">Login</h1>
-        <form
-          className="flex flex-col gap-5 w-[80%] mt-8 items-center"
-          onSubmit={submitHandler}
-        >
+    <div className="h-screen w-screen flex flex-col items-center justify-center bg-gradient-to-br from-gray-900 to-black">
+      {/* Card */}
+      <div className="w-[420px] p-8 rounded-2xl bg-gray-900/60 backdrop-blur-lg border border-gray-700 shadow-2xl">
+        <h1 className="text-3xl text-center text-white mb-6 font-semibold">
+          Login
+        </h1>
+
+        <form onSubmit={submitHandler} className="flex flex-col gap-4">
+          {/* Email */}
           <input
-            type="text"
+            type="email"
             placeholder="Enter email"
             value={email}
             required
             onChange={(e) => setEmail(e.target.value)}
-            className="border border-gray-200 rounded-md w-full p-[10px_20px] bg-gray-200 text-black placeholder:text-black outline-none"
+            className="p-3 rounded-lg bg-gray-800 text-white border border-gray-600 focus:border-blue-500 outline-none"
           />
+
+          {/* Password */}
           <input
             type="password"
             placeholder="Enter password"
             value={password}
             required
             onChange={(e) => setPassword(e.target.value)}
-            className="border border-gray-200 rounded-md w-full p-[10px_20px] bg-gray-200 text-black placeholder:text-black outline-none"
+            className="p-3 rounded-lg bg-gray-800 text-white border border-gray-600 focus:border-blue-500 outline-none"
           />
-          <button className="mt-5 p-[10px_20px] cursor-pointer bg-blue-600 w-full text-gray-200 rounded-lg">
+
+          {/* CAPTCHA SECTION */}
+          <div className="bg-gray-800 p-4 rounded-xl border border-gray-600 flex flex-col gap-3">
+            {/* Canvas */}
+            <div className="flex justify-between items-center">
+              <LoadCanvasTemplate />
+              <button
+                type="button"
+                onClick={reloadCaptcha}
+                className="text-sm px-3 py-1 bg-blue-600 rounded-md text-white hover:bg-blue-700"
+              >
+                Refresh
+              </button>
+            </div>
+
+            {/* Input */}
+            <input
+              type="text"
+              placeholder="Enter captcha"
+              value={captchaInput}
+              required
+              onChange={(e) => setCaptchaInput(e.target.value)}
+              className="p-2 rounded-md bg-gray-900 text-white border border-gray-600 outline-none focus:border-green-500"
+            />
+          </div>
+
+          {/* Button */}
+          <button className="mt-4 p-3 bg-blue-600 rounded-lg text-white font-medium hover:bg-blue-700 transition">
             Login
           </button>
-          <p className="text-lg text-gray-200 opacity-80">
+
+          <p className="text-sm text-gray-400 text-center">
             New to openPost?{" "}
-            <a href="/signup" className="text-blue-700 cursor-pointer">
+            <span
+              onClick={() => navigate("/signup")}
+              className="text-blue-500 cursor-pointer"
+            >
               Register
-            </a>
+            </span>
           </p>
         </form>
       </div>

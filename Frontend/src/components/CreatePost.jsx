@@ -37,7 +37,7 @@ function CreatePost() {
       setLoading(true);
 
       const response = await axios.post(
-        "http://localhost:9000/users/upload-post",
+        "http://localhost:8080/users/upload-post",
         formData,
         {
           withCredentials: true,

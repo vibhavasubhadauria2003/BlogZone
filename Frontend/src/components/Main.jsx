@@ -6,7 +6,9 @@ function Main() {
     <div className="h-screen w-screen bg-gray-950">
       <div className="w-full flex-col flex justify-center items-center p-5">
         <div className="w-[85%] flex justify-between items-center">
-          <h1 className="text-3xl text-gray-300 cursor-pointer">openPost.</h1>{" "}
+          <h1 className="text-3xl text-blue-500 font-serif  cursor-pointer">
+            OpenPost.
+          </h1>{" "}
           <div className="flex justify-between text-gray-200 gap-7 uppercase">
             <button
               onClick={() => navigate("/signup")}

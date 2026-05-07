@@ -37,3 +37,13 @@ button{
 .animate-slideUp {
   animation: slideUp 0.25s ease-out;
 }
+
+/* Hide scrollbar but keep scroll working */
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.hide-scrollbar {
+  -ms-overflow-style: none;  /* IE & Edge */
+  scrollbar-width: none;     /* Firefox */
+}
