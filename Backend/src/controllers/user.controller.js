@@ -8,7 +8,6 @@ import { Like } from "../models/like.model.js";
 import { Comment } from "../models/comment.model.js";
 import { uploadOnCloudinary, deleteOnCloudinary } from "../utils/Cloudinary.js";
 import { sendEmail } from "../utils/SendMail.js";
-import e from "express";
 
 const generateAccessandRefreshToken = async (userId) => {
   try {
@@ -622,7 +621,7 @@ const getallPosts = asyncHandler(async (req, res) => {
               $sort: {
                 createdAt: -1,
               },
-            }
+            },
           ],
         },
       },
@@ -791,7 +790,7 @@ const getallUsers = asyncHandler(async (req, res) => {
   if (user.role !== "admin") {
     throw new ApiError(403, "You are not authorized to access this resource");
   }
-  try{
+  try {
     const users = await User.aggregate([
       {
         $match: {
@@ -806,8 +805,8 @@ const getallUsers = asyncHandler(async (req, res) => {
           dob: 1,
           gender: 1,
           profileImage: 1,
-        }
-      }
+        },
+      },
     ]);
     if (!users) {
       throw new ApiError(500, "Error while fetching users from DB");
