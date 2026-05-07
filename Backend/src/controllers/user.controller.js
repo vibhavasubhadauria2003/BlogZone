@@ -28,6 +28,10 @@ const sendVerificationCode = asyncHandler(async (req, res) => {
   if (!email) {
     throw new ApiError(400, "Email is required");
   }
+  const existingUser = await User.findOne({ email });
+  if (existingUser) {
+    throw new ApiError(409, "User with this email already exists");
+  }
   const existingEmail = await Code.findOne({ email });
   if (existingEmail) {
     console.log("Verification code already sent to this email: ", email);
@@ -328,6 +332,7 @@ const getUserProfile = asyncHandler(async (req, res) => {
                 commentDetails: 1,
                 likesCount: { $size: "$likeDetails" },
                 commentsCount: { $size: "$commentDetails" },
+                createdAt: 1,
               },
             },
             {
@@ -613,6 +618,11 @@ const getallPosts = asyncHandler(async (req, res) => {
                 commenterProfileImage: "$commenterDetails.profileImage",
               },
             },
+            {
+              $sort: {
+                createdAt: -1,
+              },
+            }
           ],
         },
       },
@@ -631,6 +641,7 @@ const getallPosts = asyncHandler(async (req, res) => {
           commentDetails: 1,
           likesCount: { $size: "$likeDetails" },
           commentsCount: { $size: "$commentDetails" },
+          createdAt: 1,
         },
       },
       {
@@ -701,7 +712,7 @@ const getMyPosts = asyncHandler(async (req, res) => {
         $project: {
           content: 1,
           image: 1,
-
+          createdAt: 1,
           likedByUsers: {
             _id: 1,
             email: 1,
@@ -721,6 +732,7 @@ const getMyPosts = asyncHandler(async (req, res) => {
           },
           likesCount: { $size: "$likeDetails" },
           commentsCount: { $size: "$commentDetails" },
+          createdAt: 1,
         },
       },
     ]);
